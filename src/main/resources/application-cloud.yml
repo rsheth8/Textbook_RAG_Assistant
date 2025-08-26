@@ -24,7 +24,7 @@ spring:
 
 # Ollama Configuration (for cloud deployment)
 ollama:
-  base-url: ${OLLAMA_BASE_URL:https://ollama.ai/api}  # Use cloud Ollama or external service
+  base-url: ${OLLAMA_BASE_URL:https://api.ollama.ai}
   model: ${OLLAMA_MODEL:llama2}
   embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
   temperature: ${OLLAMA_TEMPERATURE:0.7}
