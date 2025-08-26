@@ -2,12 +2,6 @@ spring:
   application:
     name: textbook-rag-assistant
   
-  datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/textbook_assistant}
-    username: ${POSTGRES_USER:textbook_user}
-    password: ${POSTGRES_PASSWORD:password}
-    driver-class-name: org.postgresql.Driver
-  
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +10,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
+        connection:
+          provider_disables_autocommit: true
   
   servlet:
     multipart:
