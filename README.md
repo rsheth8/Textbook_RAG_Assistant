@@ -2,17 +2,11 @@
 
 A sophisticated Retrieval-Augmented Generation (RAG) application that provides AI-powered tutoring based on your specific textbook content. The system ensures faithful adherence to your textbook's teaching style, terminology, and approach.
 
-## 🌟 **GitHub Repository**
+## 🌟 **Live Demo**
 
-**Repository**: https://github.com/rsheth8/Textbook_RAG_Assistant
+**Live Application**: https://textbookragassistant-production.up.railway.app
 
-**Features**:
-- ✅ **Textbook-Faithful AI**: Teaches EXACTLY as your textbook teaches
-- ✅ **Global Textbook Search**: Access to entire textbook content simultaneously
-- ✅ **Modern Web Interface**: Beautiful gradient design with responsive layout
-- ✅ **Local AI Processing**: Powered by Ollama for privacy and control
-- ✅ **Smart PDF Processing**: Intelligent chunking and organization
-- ✅ **Professional Codebase**: Clean, maintainable architecture
+**GitHub Repository**: https://github.com/rsheth8/Textbook_RAG_Assistant
 
 ## 🎯 **Key Features**
 
@@ -22,6 +16,7 @@ A sophisticated Retrieval-Augmented Generation (RAG) application that provides A
 - **🎨 Modern UI**: Beautiful gradient interface with responsive design
 - **⚡ Real-time Processing**: Instant answers with comprehensive context
 - **🔒 Local AI**: Powered by Ollama for privacy and control
+- **☁️ Cloud Deployed**: Available online via Railway
 
 ## 🏗️ **Project Structure**
 
@@ -32,22 +27,16 @@ TextbookAssistant/
 │   ├── main/resources/       # Configuration and templates
 │   └── test/                 # Unit tests
 ├── 📁 docs/                  # Documentation
-│   ├── README-SpringBoot.md  # Technical setup guide
-│   ├── SETUP_COMPLETE.md     # Complete setup instructions
-│   ├── RAG_SYSTEM_COMPLETE.md # RAG system overview
-│   └── textbook_faithful_improvements.md # AI fidelity improvements
 ├── 📁 scripts/               # Utility scripts
-│   ├── tools/               # Core system tools
-│   ├── test/                # Testing scripts and data
-│   └── logs/                # Application logs
 ├── 📁 data/                  # Data storage
-│   ├── backups/             # Database backups
-│   ├── chapter_mapping.json # Textbook chapter organization
-│   └── chunks/              # PDF chunks and organized content
 ├── 📁 target/               # Compiled application
 ├── 📄 pom.xml               # Maven dependencies
 ├── 📄 docker-compose.yml    # Docker services
 ├── 📄 Dockerfile            # Application container
+├── 📄 railway.json          # Railway deployment config
+├── 📄 railway.toml          # Railway deployment config
+├── 📄 nixpacks.toml         # Railway build config
+├── 📄 Procfile              # Railway startup config
 └── 📄 env.example           # Environment variables template
 ```
 
@@ -59,8 +48,12 @@ TextbookAssistant/
 - Docker and Docker Compose
 - Ollama with `llama2` and `nomic-embed-text` models
 
-### **1. Setup Environment**
+### **1. Local Setup**
 ```bash
+# Clone the repository
+git clone https://github.com/rsheth8/Textbook_RAG_Assistant.git
+cd Textbook_RAG_Assistant
+
 # Copy environment template
 cp env.example .env
 
@@ -83,7 +76,44 @@ MAVEN_OPTS="-Xmx8g -Xms4g" mvn spring-boot:run
 
 ### **3. Access the Application**
 - **Web Interface**: http://localhost:8080
-- **Health Check**: http://localhost:8080/api/v1/health
+- **Health Check**: http://localhost:8080/health
+
+## ☁️ **Cloud Deployment (Railway)**
+
+### **Deployment Status**
+✅ **Successfully Deployed**: https://textbookragassistant-production.up.railway.app
+
+### **Environment Variables**
+The following environment variables are configured in Railway:
+
+#### **Ollama Configuration**
+```
+OLLAMA_BASE_URL=https://api.ollama.ai
+OLLAMA_MODEL=llama2
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+OLLAMA_TEMPERATURE=0.7
+OLLAMA_MAX_TOKENS=2048
+```
+
+#### **Application Configuration**
+```
+CHUNK_SIZE=300
+CHUNK_OVERLAP=50
+MAX_RETRIEVAL_RESULTS=3
+UPLOAD_DIR=/tmp/uploads
+PROCESSED_DIR=/tmp/processed
+```
+
+#### **Database Configuration**
+- **PostgreSQL**: Automatically provided by Railway
+- **Fallback**: H2 in-memory database if PostgreSQL fails
+
+### **Deployment Features**
+- ✅ **Automatic Health Checks**: `/health` endpoint
+- ✅ **Robust Fallback**: H2 database if PostgreSQL unavailable
+- ✅ **Enhanced Logging**: Detailed connection and error reporting
+- ✅ **Memory Optimization**: 2GB heap size for large documents
+- ✅ **Connection Pooling**: Optimized for cloud environment
 
 ## 📖 **Usage Guide**
 
@@ -125,10 +155,9 @@ ollama:
 ```
 
 ### **Database Configuration**
-- **Host**: localhost:5432
-- **Database**: textbook_assistant
-- **Username**: textbook_user
-- **Password**: (set in .env file)
+- **Local**: PostgreSQL via Docker Compose
+- **Cloud**: Railway PostgreSQL with H2 fallback
+- **Vector Storage**: pgvector for embeddings
 
 ## 🛠️ **Development**
 
@@ -163,7 +192,7 @@ mvn test
 ### **Health Monitoring**
 ```bash
 # Check application health
-curl http://localhost:8080/api/v1/health
+curl http://localhost:8080/health
 
 # Monitor system status
 ./scripts/tools/system_status.sh
@@ -201,9 +230,9 @@ tail -f scripts/logs/app_*.log
 ## 🔒 **Security & Privacy**
 
 - **Local AI Processing**: All AI operations run locally via Ollama
-- **No External APIs**: No data sent to external services
+- **No External APIs**: No data sent to external services (except Ollama API)
 - **Database Encryption**: PostgreSQL with secure configuration
-- **Environment Variables**: Sensitive data stored in .env file
+- **Environment Variables**: Sensitive data stored in environment variables
 
 ## 📈 **Performance**
 
@@ -217,6 +246,7 @@ tail -f scripts/logs/app_*.log
 - **Docker Containerization**: Easy deployment and scaling
 - **Database Optimization**: Indexed vector searches
 - **Caching**: Efficient embedding storage and retrieval
+- **Cloud Deployment**: Railway with automatic scaling
 
 ## 🤝 **Contributing**
 
@@ -236,11 +266,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Port 8080 in use**: `lsof -ti:8080 | xargs kill -9`
 - **Memory issues**: Increase JVM heap size in MAVEN_OPTS
 - **Ollama connection**: Ensure Ollama is running on port 11434
+- **PostgreSQL connection**: Check Docker Compose or Railway service status
 
 ### **Getting Help**
 - Check the logs in `scripts/logs/`
 - Review the documentation in `docs/`
 - Test with the provided scripts in `scripts/test/`
+- Visit the live demo: https://textbookragassistant-production.up.railway.app
 
 ---
 
