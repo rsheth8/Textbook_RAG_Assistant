@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["jdk17"]
+nixPkgs = ["jdk17", "maven"]
 
 [phases.install]
-cmds = ["./mvnw clean package -DskipTests", "./verify-build.sh"]
+cmds = ["mvn clean package -DskipTests"]
 
 [start]
-cmd = "./start-minimal.sh"
+cmd = "java -Xmx2g -Xms1g -XX:+UseG1GC -Dspring.profiles.active=simple -jar target/textbook-rag-assistant-1.0.0.jar"
