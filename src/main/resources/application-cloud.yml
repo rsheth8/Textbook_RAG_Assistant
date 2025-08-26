@@ -68,3 +68,14 @@ management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      simple:
+        enabled: false
+    binders:
+      system:
+        enabled: false
+      process:
+        enabled: false
+      jvm:
+        enabled: false
