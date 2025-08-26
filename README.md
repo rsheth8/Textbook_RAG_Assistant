@@ -2,6 +2,18 @@
 
 A sophisticated Retrieval-Augmented Generation (RAG) application that provides AI-powered tutoring based on your specific textbook content. The system ensures faithful adherence to your textbook's teaching style, terminology, and approach.
 
+## 🌟 **GitHub Repository**
+
+**Repository**: https://github.com/rsheth8/Textbook_RAG_Assistant
+
+**Features**:
+- ✅ **Textbook-Faithful AI**: Teaches EXACTLY as your textbook teaches
+- ✅ **Global Textbook Search**: Access to entire textbook content simultaneously
+- ✅ **Modern Web Interface**: Beautiful gradient design with responsive layout
+- ✅ **Local AI Processing**: Powered by Ollama for privacy and control
+- ✅ **Smart PDF Processing**: Intelligent chunking and organization
+- ✅ **Professional Codebase**: Clean, maintainable architecture
+
 ## 🎯 **Key Features**
 
 - **📖 Textbook-Faithful AI**: Teaches EXACTLY as your textbook teaches
