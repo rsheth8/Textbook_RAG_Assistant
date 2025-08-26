@@ -27,6 +27,6 @@ After this deployment:
 
 ---
 
-*Deployment triggered at: $(date)*
+*Deployment triggered at: 2025-08-26 12:19:30*
 *Status: Complete rebuild with fresh JAR*
 *Local testing: ✅ PASSED*
