@@ -29,24 +29,35 @@ public class DatabaseConfig {
     public DataSource dataSource() {
         logger.info("Configuring database connection for Railway...");
         
-        HikariDataSource dataSource = new HikariDataSource();
-        
-        // Convert Railway's PostgreSQL URL to JDBC format
-        String jdbcUrl = convertToJdbcUrl(databaseUrl);
-        logger.info("Using JDBC URL: {}", jdbcUrl.replaceAll(":[^:@]*@", ":***@"));
-        
-        dataSource.setJdbcUrl(jdbcUrl);
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        
-        // Connection pool settings
-        dataSource.setMaximumPoolSize(10);
-        dataSource.setMinimumIdle(5);
-        dataSource.setConnectionTimeout(30000);
-        dataSource.setIdleTimeout(600000);
-        dataSource.setMaxLifetime(1800000);
-        
-        logger.info("Database configuration complete");
-        return dataSource;
+        try {
+            HikariDataSource dataSource = new HikariDataSource();
+            
+            // Convert Railway's PostgreSQL URL to JDBC format
+            String jdbcUrl = convertToJdbcUrl(databaseUrl);
+            logger.info("Using JDBC URL: {}", jdbcUrl.replaceAll(":[^:@]*@", ":***@"));
+            
+            dataSource.setJdbcUrl(jdbcUrl);
+            dataSource.setDriverClassName("org.postgresql.Driver");
+            
+            // Connection pool settings optimized for Railway
+            dataSource.setMaximumPoolSize(5);
+            dataSource.setMinimumIdle(1);
+            dataSource.setConnectionTimeout(30000);
+            dataSource.setIdleTimeout(300000);
+            dataSource.setMaxLifetime(900000);
+            dataSource.setLeakDetectionThreshold(60000);
+            
+            // Connection test settings
+            dataSource.setConnectionTestQuery("SELECT 1");
+            dataSource.setValidationTimeout(5000);
+            
+            logger.info("Database configuration complete");
+            return dataSource;
+            
+        } catch (Exception e) {
+            logger.error("Failed to configure database connection: {}", e.getMessage());
+            throw new RuntimeException("Database configuration failed", e);
+        }
     }
     
     private String convertToJdbcUrl(String url) {
