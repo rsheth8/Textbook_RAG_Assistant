@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: textbook-rag-assistant
+  
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/textbook_assistant}
+    username: ${POSTGRES_USER:textbook_user}
+    password: ${POSTGRES_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+  
+  servlet:
+    multipart:
+      max-file-size: 50MB  # Reduced for cloud deployment
+      max-request-size: 50MB  # Reduced for cloud deployment
+
+# Ollama Configuration (for cloud deployment)
+ollama:
+  base-url: ${OLLAMA_BASE_URL:https://ollama.ai/api}  # Use cloud Ollama or external service
+  model: ${OLLAMA_MODEL:llama2}
+  embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+  temperature: ${OLLAMA_TEMPERATURE:0.7}
+  max-tokens: ${OLLAMA_MAX_TOKENS:2048}
+
+# Application Configuration
+app:
+  chunk:
+    size: ${CHUNK_SIZE:300}  # Smaller chunks for cloud processing
+    overlap: ${CHUNK_OVERLAP:50}  # Less overlap for efficiency
+  max-retrieval-results: ${MAX_RETRIEVAL_RESULTS:3}  # Fewer results for faster queries
+  upload:
+    dir: ${UPLOAD_DIR:/tmp/uploads}
+  processed:
+    dir: ${PROCESSED_DIR:/tmp/processed}
+
+# Logging (reduced for cloud)
+logging:
+  level:
+    com.textbookassistant: INFO
+    org.springframework.ai: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+# Server configuration
+server:
+  port: ${PORT:8080}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
