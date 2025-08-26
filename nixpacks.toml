@@ -5,4 +5,4 @@ nixPkgs = ["jdk17"]
 cmds = ["./mvnw clean package -DskipTests", "./verify-build.sh"]
 
 [start]
-cmd = "java -Xmx2g -Xms1g -XX:+UseG1GC -XX:+UseContainerSupport -jar target/textbook-rag-assistant-1.0.0.jar"
+cmd = "./start-minimal.sh"

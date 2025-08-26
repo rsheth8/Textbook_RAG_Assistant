@@ -117,13 +117,5 @@ public class RagController {
         }
     }
     
-    @GetMapping("/health")
-    public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("RAG Assistant is running!");
-    }
-    
-    @GetMapping("/api/v1/health")
-    public ResponseEntity<String> apiHealthCheck() {
-        return ResponseEntity.ok("RAG Assistant is running!");
-    }
+
 }
