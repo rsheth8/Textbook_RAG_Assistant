@@ -2,7 +2,6 @@ package com.textbookassistant.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +44,32 @@ public class HealthController {
         response.put("service", "Textbook RAG Assistant");
         
         return ResponseEntity.ok(response);
+    }
+    
+    // Environment variable debug endpoint
+    @GetMapping("/debug/env")
+    public ResponseEntity<Map<String, Object>> debugEnvironment() {
+        Map<String, Object> envInfo = new HashMap<>();
+        
+        // Check key environment variables
+        envInfo.put("DATABASE_URL_SET", System.getenv("DATABASE_URL") != null);
+        envInfo.put("OLLAMA_BASE_URL_SET", System.getenv("OLLAMA_BASE_URL") != null);
+        envInfo.put("OLLAMA_MODEL_SET", System.getenv("OLLAMA_MODEL") != null);
+        envInfo.put("OLLAMA_EMBEDDING_MODEL_SET", System.getenv("OLLAMA_EMBEDDING_MODEL") != null);
+        envInfo.put("POSTGRES_USER_SET", System.getenv("POSTGRES_USER") != null);
+        envInfo.put("POSTGRES_PASSWORD_SET", System.getenv("POSTGRES_PASSWORD") != null);
+        
+        // Show partial values for debugging (without exposing sensitive data)
+        String dbUrl = System.getenv("DATABASE_URL");
+        if (dbUrl != null) {
+            envInfo.put("DATABASE_URL_PARTIAL", dbUrl.replaceAll(":[^:@]*@", ":***@"));
+        }
+        
+        envInfo.put("OLLAMA_BASE_URL", System.getenv("OLLAMA_BASE_URL"));
+        envInfo.put("OLLAMA_MODEL", System.getenv("OLLAMA_MODEL"));
+        envInfo.put("OLLAMA_EMBEDDING_MODEL", System.getenv("OLLAMA_EMBEDDING_MODEL"));
+        
+        return ResponseEntity.ok(envInfo);
     }
     
     // Keep other endpoints for compatibility

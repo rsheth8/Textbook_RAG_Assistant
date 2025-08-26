@@ -34,6 +34,13 @@ public class DatabaseConfig {
         logger.info("POSTGRES_USER: {}", postgresUser != null ? postgresUser : "NOT SET");
         logger.info("POSTGRES_PASSWORD: {}", postgresPassword != null ? "***" : "NOT SET");
         
+        // Check if we have the required environment variables
+        if (databaseUrl == null || databaseUrl.isEmpty()) {
+            logger.error("❌ DATABASE_URL is not set! This is required for cloud profile.");
+            logger.error("Please ensure the PostgreSQL service is properly connected to your Railway application.");
+            throw new RuntimeException("DATABASE_URL environment variable is required for cloud profile");
+        }
+        
         try {
             // Test the connection first
             String jdbcUrl = convertToJdbcUrl(databaseUrl);
@@ -45,6 +52,10 @@ public class DatabaseConfig {
                 testConn.close();
             } catch (Exception e) {
                 logger.error("❌ Database connection test failed: {}", e.getMessage());
+                logger.error("This might be due to:");
+                logger.error("1. PostgreSQL service not being properly connected");
+                logger.error("2. Network connectivity issues");
+                logger.error("3. Incorrect database credentials");
                 throw e;
             }
             
