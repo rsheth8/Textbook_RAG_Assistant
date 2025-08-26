@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textbook RAG Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #3b82f6;
+            --light-blue: #60a5fa;
+            --lighter-blue: #93c5fd;
+            --lightest-blue: #dbeafe;
+            --primary-green: #10b981;
+            --light-green: #34d399;
+            --lighter-green: #6ee7b7;
+            --lightest-green: #d1fae5;
+            --primary-purple: #8b5cf6;
+            --light-purple: #a78bfa;
+            --lighter-purple: #c4b5fd;
+            --lightest-purple: #e9d5ff;
+            --white: #ffffff;
+            --light-gray: #f8fafc;
+            --gray: #64748b;
+            --dark-gray: #334155;
+            --border-color: #e2e8f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: hsla(202, 51%, 66%, 1);
+            background: linear-gradient(45deg, hsla(202, 51%, 66%, 1) 0%, hsla(208, 50%, 56%, 1) 25%, hsla(202, 56%, 41%, 1) 50%, hsla(247, 46%, 56%, 1) 75%, hsla(270, 78%, 52%, 1) 100%);
+            background: -moz-linear-gradient(45deg, hsla(202, 51%, 66%, 1) 0%, hsla(208, 50%, 56%, 1) 25%, hsla(202, 56%, 41%, 1) 50%, hsla(247, 46%, 56%, 1) 75%, hsla(270, 78%, 52%, 1) 100%);
+            background: -webkit-linear-gradient(45deg, hsla(202, 51%, 66%, 1) 0%, hsla(208, 50%, 56%, 1) 25%, hsla(202, 56%, 41%, 1) 50%, hsla(247, 46%, 56%, 1) 75%, hsla(270, 78%, 52%, 1) 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#7CB4D5", endColorstr="#5793C7", GradientType=1);
+            color: var(--white);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: var(--white);
+            font-weight: 400;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--white);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Main Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Form Elements */
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-purple);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            outline: none;
+        }
+        
+        .btn {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--light-blue), var(--light-purple));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+        
+        /* Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            color: var(--white);
+            margin-left: auto;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .assistant-message {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            margin-right: auto;
+        }
+        
+        .message strong {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        /* Chapter Selection */
+        .chapter-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .chapter-item {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+        
+        .chapter-item:hover {
+            border-color: var(--primary-purple);
+            background: linear-gradient(135deg, var(--lightest-blue), var(--lightest-purple));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+        
+        .chapter-item.selected {
+            border-color: var(--primary-purple);
+            background: linear-gradient(135deg, var(--lightest-blue), var(--lightest-purple));
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        
+        .chapter-info strong {
+            color: var(--dark-gray);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .chapter-description {
+            color: var(--gray);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .chapter-meta {
+            color: var(--gray);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        /* Search Modes */
+        .search-modes {
+            margin-bottom: 1.5rem;
+        }
+        
+        .mode-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+        
+        .mode-option:hover {
+            border-color: var(--primary-purple);
+            background: linear-gradient(135deg, var(--lightest-blue), var(--lightest-green));
+            transform: translateY(-1px);
+        }
+        
+        .mode-option input[type="radio"] {
+            accent-color: var(--primary-purple);
+        }
+        
+        .mode-option.selected {
+            border-color: var(--primary-purple);
+            background: linear-gradient(135deg, var(--lightest-blue), var(--lightest-green));
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--primary-blue);
+        }
+        
+        .spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid var(--lightest-blue);
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Sources */
+        .sources-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--lightest-blue), var(--lightest-purple));
+            border-radius: 0.75rem;
+            border-left: 4px solid var(--primary-purple);
+        }
+        
+        .sources-section strong {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+        
+        .source-item {
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            background: var(--white);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--gray);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 0.75rem;
+            border: none;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-graduation-cap"></i> Textbook RAG Assistant</h1>
+            <p>Your AI-powered study companion for Applied Linear Algebra</p>
+            <div class="status-badge">
+                <div class="status-indicator" id="status-indicator"></div>
+                <span id="status-text">System Online</span>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+                <!-- Upload Section -->
+                <div class="card">
+                    <h3><i class="fas fa-upload"></i> Upload Textbook</h3>
+                    <p class="text-muted mb-3">Upload your textbook PDF to enable AI-powered question answering</p>
+                    
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="fileInput" name="file" accept=".pdf,.txt" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload
+                        </button>
+                    </form>
+                    
+                    <div id="uploadStatus" class="mt-3"></div>
+                </div>
+                
+                <!-- Search Mode Selection -->
+                <div class="card">
+                    <h3><i class="fas fa-search"></i> Search Mode</h3>
+                    
+                    <div class="search-modes">
+                        <div class="mode-option" id="globalMode">
+                            <input type="radio" name="searchMode" id="globalSearch" value="global" checked>
+                            <div>
+                                <strong>🌐 Global Search</strong>
+                                <div class="text-muted small">Search across all chapters</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-option" id="chapterMode">
+                            <input type="radio" name="searchMode" id="chapterSearch" value="chapter">
+                            <div>
+                                <strong>📚 Chapter Search</strong>
+                                <div class="text-muted small">Focus on specific chapters</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chapter-list" id="chapterList" style="display: none;">
+                        <div class="text-muted text-center">Loading chapters...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side - Chat -->
+            <div class="chat-section">
+                <div class="card">
+                    <h3><i class="fas fa-comments"></i> Ask Questions</h3>
+                    
+                    <div class="chat-container">
+                        <!-- Chat Messages -->
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message assistant-message">
+                                <strong>Assistant</strong>
+                                Hello! I'm your AI study assistant with access to your entire Applied Linear Algebra textbook! 📚 I teach EXACTLY as your textbook teaches, using the same examples, terminology, and approach. Ask me anything about the material and I'll explain it the way your book does!
+                            </div>
+                        </div>
+                        
+                        <!-- Query Form -->
+                        <form id="queryForm">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="queryInput" placeholder="Ask a question about your textbook..." required>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="learningLevel">
+                                        <option value="beginner">Beginner</option>
+                                        <option value="intermediate" selected>Intermediate</option>
+                                        <option value="advanced">Advanced</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="responseType">
+                                        <option value="explanation" selected>Explanation</option>
+                                        <option value="detailed">Detailed</option>
+                                        <option value="summary">Summary</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-paper-plane"></i> Ask
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Loading Indicator -->
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        <p class="mt-2">Processing your question...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedDocumentId = null;
+        let searchMode = 'global'; // Default to global search
+        let chapters = []; // Store chapter data
+        
+        // Load chapters on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChapters();
+            checkSystemStatus();
+            setupSearchModeHandlers();
+        });
+        
+        // Setup search mode handlers
+        function setupSearchModeHandlers() {
+            document.getElementById('globalSearch').addEventListener('change', function() {
+                if (this.checked) {
+                    searchMode = 'global';
+                    document.getElementById('chapterList').style.display = 'none';
+                    selectedDocumentId = 0; // Use 0 for global search
+                    updateModeSelection('globalMode');
+                    addMessage('assistant', '🌐 Global textbook search enabled! I can now search across all chapters for comprehensive answers.');
+                }
+            });
+            
+            document.getElementById('chapterSearch').addEventListener('change', function() {
+                if (this.checked) {
+                    searchMode = 'chapter';
+                    document.getElementById('chapterList').style.display = 'block';
+                    loadChapters(); // Load chapters for selection
+                    updateModeSelection('chapterMode');
+                }
+            });
+        }
+        
+        function updateModeSelection(selectedMode) {
+            document.querySelectorAll('.mode-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById(selectedMode).classList.add('selected');
+        }
+        
+        // Check system status
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/api/v1/health');
+                if (response.ok) {
+                    document.getElementById('status-text').textContent = 'System Online';
+                    document.getElementById('status-indicator').style.background = 'var(--primary-blue)';
+                } else {
+                    document.getElementById('status-text').textContent = 'System Offline';
+                    document.getElementById('status-indicator').style.background = '#dc3545';
+                }
+            } catch (error) {
+                document.getElementById('status-text').textContent = 'System Offline';
+                document.getElementById('status-indicator').style.background = '#dc3545';
+            }
+        }
+        
+        // Load chapters
+        async function loadChapters() {
+            try {
+                // Load chapter mapping from the JSON file
+                const response = await fetch('/chapter_mapping.json');
+                const chapterData = await response.json();
+                chapters = chapterData.chapters;
+                
+                const chapterList = document.getElementById('chapterList');
+                chapterList.innerHTML = '';
+                
+                chapters.forEach(chapter => {
+                    const chapterElement = document.createElement('div');
+                    chapterElement.className = 'chapter-item';
+                    chapterElement.innerHTML = `
+                        <div class="chapter-info">
+                            <strong>📖 Chapter ${chapter.id}: ${chapter.name}</strong>
+                            <div class="chapter-description">${chapter.description}</div>
+                            <div class="chapter-meta">Pages ${chapter.pageRange} • ${chapter.parts.length} parts</div>
+                        </div>
+                    `;
+                    chapterElement.onclick = () => selectChapter(chapter, chapterElement);
+                    chapterList.appendChild(chapterElement);
+                });
+            } catch (error) {
+                console.error('Error loading chapters:', error);
+                // Fallback to loading documents if chapter mapping fails
+                loadDocuments();
+            }
+        }
+        
+        // Select chapter
+        function selectChapter(chapter, element) {
+            // Remove selection from all chapters
+            document.querySelectorAll('.chapter-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked chapter
+            element.classList.add('selected');
+            selectedDocumentId = chapter.documentIds[0]; // Use first document ID for chapter search
+            
+            addMessage('assistant', `📚 Selected Chapter ${chapter.id}: ${chapter.name} (Pages ${chapter.pageRange})`);
+        }
+        
+        // Upload form handler
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('fileInput');
+            const uploadStatus = document.getElementById('uploadStatus');
+            
+            if (!fileInput.files[0]) {
+                uploadStatus.innerHTML = '<div class="alert alert-warning">Please select a file</div>';
+                return;
+            }
+            
+            formData.append('file', fileInput.files[0]);
+            
+            uploadStatus.innerHTML = '<div class="alert alert-info">Uploading...</div>';
+            
+            try {
+                const response = await fetch('/api/v1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    uploadStatus.innerHTML = '<div class="alert alert-success">Upload successful! Document ID: ' + result.documentId + '</div>';
+                    fileInput.value = '';
+                    loadChapters(); // Reload chapter list
+                } else {
+                    uploadStatus.innerHTML = '<div class="alert alert-danger">Upload failed: ' + (result.message || 'Unknown error') + '</div>';
+                }
+            } catch (error) {
+                uploadStatus.innerHTML = '<div class="alert alert-danger">Upload failed: ' + error.message + '</div>';
+            }
+        });
+        
+        // Query form handler
+        document.getElementById('queryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Set document ID based on search mode
+            let documentIdToUse = selectedDocumentId;
+            if (searchMode === 'global') {
+                documentIdToUse = 0; // Use 0 for global search
+            } else if (!selectedDocumentId) {
+                addMessage('assistant', 'Please select a chapter first');
+                return;
+            }
+            
+            const query = document.getElementById('queryInput').value;
+            const learningLevel = document.getElementById('learningLevel').value;
+            const responseType = document.getElementById('responseType').value;
+            
+            if (!query.trim()) {
+                return;
+            }
+            
+            // Add user message
+            addMessage('user', query);
+            document.getElementById('queryInput').value = '';
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/v1/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        documentId: documentIdToUse,
+                        learningLevel: learningLevel,
+                        responseType: responseType
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                
+                if (response.ok) {
+                    let messageContent = result.answer;
+                    
+                    // Add sources if available
+                    if (result.sources && result.sources.length > 0) {
+                        messageContent += '<div class="sources-section"><strong>Sources:</strong>';
+                        result.sources.forEach((source, index) => {
+                            messageContent += `<div class="source-item">${source}</div>`;
+                        });
+                        messageContent += '</div>';
+                    }
+                    
+                    addMessage('assistant', messageContent);
+                } else {
+                    addMessage('assistant', 'Sorry, I encountered an error while processing your question.');
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                addMessage('assistant', 'Sorry, I encountered an error while processing your question.');
+            }
+        });
+        
+        // Add message to chat
+        function addMessage(type, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `<strong>You</strong>${content}`;
+            } else {
+                messageDiv.innerHTML = `<strong>Assistant</strong>${content}`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>

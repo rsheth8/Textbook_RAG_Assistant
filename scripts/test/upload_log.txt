@@ -1,0 +1,20 @@
+2025-08-25 17:23:16 - Starting process for PDF: /Users/rahilsheth/Downloads/Math 4242/Applied Linear Algebra.pdf
+2025-08-25 17:23:18 - Created chunk 1: ./pdf_chunks/Applied Linear Algebra_part1_pages1-50.pdf (1MB, pages 1-50)
+2025-08-25 17:23:19 - Created chunk 2: ./pdf_chunks/Applied Linear Algebra_part2_pages51-100.pdf (1MB, pages 51-100)
+2025-08-25 17:23:19 - Created chunk 3: ./pdf_chunks/Applied Linear Algebra_part3_pages101-150.pdf (1MB, pages 101-150)
+2025-08-25 17:23:20 - Created chunk 4: ./pdf_chunks/Applied Linear Algebra_part4_pages151-200.pdf (1MB, pages 151-200)
+2025-08-25 17:23:21 - Created chunk 5: ./pdf_chunks/Applied Linear Algebra_part5_pages201-250.pdf (1MB, pages 201-250)
+2025-08-25 17:23:22 - Created chunk 6: ./pdf_chunks/Applied Linear Algebra_part6_pages251-300.pdf (1MB, pages 251-300)
+2025-08-25 17:23:23 - Created chunk 7: ./pdf_chunks/Applied Linear Algebra_part7_pages301-350.pdf (1MB, pages 301-350)
+2025-08-25 17:23:24 - Created chunk 8: ./pdf_chunks/Applied Linear Algebra_part8_pages351-400.pdf (1MB, pages 351-400)
+2025-08-25 17:23:24 - Created chunk 9: ./pdf_chunks/Applied Linear Algebra_part9_pages401-450.pdf (1MB, pages 401-450)
+2025-08-25 17:23:25 - Created chunk 10: ./pdf_chunks/Applied Linear Algebra_part10_pages451-500.pdf (1MB, pages 451-500)
+2025-08-25 17:23:26 - Created chunk 11: ./pdf_chunks/Applied Linear Algebra_part11_pages501-550.pdf (1MB, pages 501-550)
+2025-08-25 17:23:27 - Created chunk 12: ./pdf_chunks/Applied Linear Algebra_part12_pages551-600.pdf (1MB, pages 551-600)
+2025-08-25 17:23:28 - Created chunk 13: ./pdf_chunks/Applied Linear Algebra_part13_pages601-650.pdf (1MB, pages 601-650)
+2025-08-25 17:23:29 - Created chunk 14: ./pdf_chunks/Applied Linear Algebra_part14_pages651-700.pdf (1MB, pages 651-700)
+2025-08-25 17:23:29 - Created chunk 15: ./pdf_chunks/Applied Linear Algebra_part15_pages701-702.pdf (1MB, pages 701-702)
+2025-08-25 17:23:50 - Upload failed: Applied Linear Algebra_part1_pages1-50.pdf - Java heap space
+2025-08-25 17:24:08 - Upload failed: Applied Linear Algebra_part10_pages451-500.pdf - Java heap space
+2025-08-25 17:24:32 - Upload failed: Applied Linear Algebra_part11_pages501-550.pdf - Java heap space
+2025-08-25 17:25:01 - Upload failed: Applied Linear Algebra_part12_pages551-600.pdf - Java heap space

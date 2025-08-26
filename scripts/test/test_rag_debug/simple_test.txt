@@ -1,0 +1,3 @@
+A matrix is a rectangular array of numbers.
+Linear algebra deals with matrices and vectors.
+Vectors are one-dimensional arrays.

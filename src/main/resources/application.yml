@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: textbook-rag-assistant
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/textbook_assistant
+    username: ${POSTGRES_USER:textbook_user}
+    password: ${POSTGRES_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  servlet:
+    multipart:
+      max-file-size: 100MB  # Increased for large PDFs
+      max-request-size: 100MB  # Increased for large PDFs
+
+# Ollama Configuration
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:llama2}
+  embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+  temperature: ${OLLAMA_TEMPERATURE:0.7}
+  max-tokens: ${OLLAMA_MAX_TOKENS:2048}
+
+# Application Configuration
+app:
+  chunk:
+    size: ${CHUNK_SIZE:500}  # Smaller chunks for faster processing
+    overlap: ${CHUNK_OVERLAP:100}  # Less overlap for efficiency
+  max-retrieval-results: ${MAX_RETRIEVAL_RESULTS:5}  # Fewer results for faster queries
+  upload:
+    dir: ${UPLOAD_DIR:./data/uploads}
+  processed:
+    dir: ${PROCESSED_DIR:./data/processed}
+
+# Logging
+logging:
+  level:
+    com.textbookassistant: DEBUG
+    org.springframework.ai: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

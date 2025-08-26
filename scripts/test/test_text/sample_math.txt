@@ -1,0 +1,41 @@
+Linear Algebra Fundamentals
+
+Chapter 1: Introduction to Matrices
+
+A matrix is a rectangular array of numbers arranged in rows and columns. 
+Matrices are fundamental objects in linear algebra and have many applications 
+in mathematics, physics, engineering, and computer science.
+
+Example 1.1: Consider the matrix A = [1 2; 3 4]
+This is a 2x2 matrix with elements:
+- Row 1: [1, 2]
+- Row 2: [3, 4]
+
+Matrix Operations:
+1. Addition: Two matrices can be added if they have the same dimensions
+2. Multiplication: Matrix multiplication follows specific rules
+3. Transpose: The transpose of a matrix flips rows and columns
+
+Chapter 2: Vector Spaces
+
+A vector space is a collection of vectors that can be added together and 
+multiplied by scalars. The most common vector space is R^n, the set of 
+all n-dimensional real vectors.
+
+Properties of Vector Spaces:
+- Closure under addition
+- Closure under scalar multiplication
+- Existence of zero vector
+- Existence of additive inverses
+
+Chapter 3: Linear Transformations
+
+A linear transformation is a function between vector spaces that preserves 
+vector addition and scalar multiplication. Linear transformations can be 
+represented by matrices.
+
+Key Properties:
+- T(u + v) = T(u) + T(v)
+- T(cu) = cT(u)
+
+This concludes our introduction to linear algebra fundamentals.
