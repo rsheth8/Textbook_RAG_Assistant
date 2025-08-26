@@ -2,7 +2,7 @@
 nixPkgs = ["jdk17"]
 
 [phases.install]
-cmds = ["./mvnw clean package -DskipTests"]
+cmds = ["./mvnw clean package -DskipTests", "./verify-build.sh"]
 
 [start]
-cmd = "./start.sh"
+cmd = "java -Xmx2g -Xms1g -XX:+UseG1GC -XX:+UseContainerSupport -jar target/textbook-rag-assistant-1.0.0.jar"
