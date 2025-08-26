@@ -16,21 +16,23 @@ public class HealthController {
     
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
     
+    // Super simple health check - just returns OK if the app is running
     @GetMapping("/health")
-    public ResponseEntity<String> basicHealthCheck() {
-        logger.info("Basic health check requested");
-        return ResponseEntity.ok("RAG Assistant is running!");
+    public ResponseEntity<Map<String, Object>> simpleHealthCheck() {
+        logger.info("Simple health check requested");
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        response.put("service", "Textbook RAG Assistant");
+        
+        return ResponseEntity.ok(response);
     }
     
+    // Keep other endpoints for compatibility
     @GetMapping("/api/v1/health")
     public ResponseEntity<String> apiHealthCheck() {
         logger.info("API health check requested");
-        return ResponseEntity.ok("RAG Assistant is running!");
-    }
-    
-    @GetMapping("/api/health")
-    public ResponseEntity<String> apiHealthCheckAlt() {
-        logger.info("API health check (alt) requested");
         return ResponseEntity.ok("RAG Assistant is running!");
     }
     
@@ -38,18 +40,5 @@ public class HealthController {
     public ResponseEntity<String> pingHealthCheck() {
         logger.info("Ping health check requested");
         return ResponseEntity.ok("RAG Assistant is running!");
-    }
-    
-    @GetMapping("/status")
-    public ResponseEntity<Map<String, Object>> detailedStatus() {
-        logger.info("Detailed status check requested");
-        
-        Map<String, Object> status = new HashMap<>();
-        status.put("status", "running");
-        status.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        status.put("service", "Textbook RAG Assistant");
-        status.put("version", "1.0.0");
-        
-        return ResponseEntity.ok(status);
     }
 }

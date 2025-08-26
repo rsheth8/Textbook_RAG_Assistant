@@ -19,10 +19,10 @@ spring:
   
   servlet:
     multipart:
-      max-file-size: 50MB  # Reduced for cloud deployment
-      max-request-size: 50MB  # Reduced for cloud deployment
+      max-file-size: 50MB
+      max-request-size: 50MB
 
-# Ollama Configuration (for cloud deployment)
+# Ollama Configuration
 ollama:
   base-url: ${OLLAMA_BASE_URL:https://api.ollama.ai}
   model: ${OLLAMA_MODEL:llama2}
@@ -33,21 +33,20 @@ ollama:
 # Application Configuration
 app:
   chunk:
-    size: ${CHUNK_SIZE:300}  # Smaller chunks for cloud processing
-    overlap: ${CHUNK_OVERLAP:50}  # Less overlap for efficiency
-  max-retrieval-results: ${MAX_RETRIEVAL_RESULTS:3}  # Fewer results for faster queries
+    size: ${CHUNK_SIZE:300}
+    overlap: ${CHUNK_OVERLAP:50}
+  max-retrieval-results: ${MAX_RETRIEVAL_RESULTS:3}
   upload:
     dir: ${UPLOAD_DIR:/tmp/uploads}
   processed:
     dir: ${PROCESSED_DIR:/tmp/processed}
 
-# Logging (reduced for cloud)
+# Logging
 logging:
   level:
     com.textbookassistant: INFO
     org.springframework.ai: INFO
     org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
     root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
@@ -58,24 +57,3 @@ server:
   compression:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
-
-# Health check configuration
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: always
-  metrics:
-    export:
-      simple:
-        enabled: false
-    binders:
-      system:
-        enabled: false
-      process:
-        enabled: false
-      jvm:
-        enabled: false
