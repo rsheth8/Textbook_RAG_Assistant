@@ -1,0 +1,19 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "./start.sh"
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[deploy.envs]
+SPRING_PROFILES_ACTIVE = "cloud"
+OLLAMA_BASE_URL = "https://api.ollama.ai"
+OLLAMA_MODEL = "llama2"
+OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
+CHUNK_SIZE = "300"
+CHUNK_OVERLAP = "50"
+MAX_RETRIEVAL_RESULTS = "3"
+PORT = "8080"

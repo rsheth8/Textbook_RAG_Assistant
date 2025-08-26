@@ -5,4 +5,4 @@ nixPkgs = ["jdk17"]
 cmds = ["./mvnw clean package -DskipTests"]
 
 [start]
-cmd = "java -Xmx2g -Xms1g -jar target/textbook-rag-assistant-0.0.1-SNAPSHOT.jar"
+cmd = "./start.sh"
