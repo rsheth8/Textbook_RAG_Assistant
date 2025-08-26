@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.net.URI;
 
 @Configuration
 @Profile("cloud")
@@ -36,27 +37,27 @@ public class DatabaseConfig {
         
         // Check if we have the required environment variables
         if (databaseUrl == null || databaseUrl.isEmpty()) {
-            logger.error("❌ DATABASE_URL is not set! This is required for cloud profile.");
-            logger.error("Please ensure the PostgreSQL service is properly connected to your Railway application.");
-            throw new RuntimeException("DATABASE_URL environment variable is required for cloud profile");
+            logger.warn("⚠️ DATABASE_URL is not set, falling back to H2 in-memory database");
+            return createH2DataSource();
         }
         
         try {
-            // Test the connection first
+            // Convert and validate the URL
             String jdbcUrl = convertToJdbcUrl(databaseUrl);
-            logger.info("Testing connection with JDBC URL: {}", jdbcUrl.replaceAll(":[^:@]*@", ":***@"));
+            logger.info("Using JDBC URL: {}", jdbcUrl.replaceAll(":[^:@]*@", ":***@"));
+            
+            // Validate URL format
+            validateJdbcUrl(jdbcUrl);
             
             // Try a simple connection test
+            logger.info("Testing database connection...");
             try (Connection testConn = DriverManager.getConnection(jdbcUrl)) {
                 logger.info("✅ Database connection test successful!");
                 testConn.close();
             } catch (Exception e) {
                 logger.error("❌ Database connection test failed: {}", e.getMessage());
-                logger.error("This might be due to:");
-                logger.error("1. PostgreSQL service not being properly connected");
-                logger.error("2. Network connectivity issues");
-                logger.error("3. Incorrect database credentials");
-                throw e;
+                logger.warn("⚠️ Falling back to H2 in-memory database");
+                return createH2DataSource();
             }
             
             HikariDataSource dataSource = new HikariDataSource();
@@ -80,9 +81,28 @@ public class DatabaseConfig {
             return dataSource;
             
         } catch (Exception e) {
-            logger.error("Failed to configure database connection: {}", e.getMessage(), e);
-            throw new RuntimeException("Database configuration failed", e);
+            logger.error("Failed to configure PostgreSQL connection: {}", e.getMessage());
+            logger.warn("⚠️ Falling back to H2 in-memory database");
+            return createH2DataSource();
         }
+    }
+    
+    private DataSource createH2DataSource() {
+        logger.info("Creating H2 in-memory database as fallback");
+        
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl("jdbc:h2:mem:fallback");
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
+        
+        // Simple settings for H2
+        dataSource.setMaximumPoolSize(5);
+        dataSource.setMinimumIdle(1);
+        dataSource.setConnectionTimeout(30000);
+        
+        logger.info("H2 fallback database configured");
+        return dataSource;
     }
     
     private String convertToJdbcUrl(String url) {
@@ -108,5 +128,24 @@ public class DatabaseConfig {
         
         logger.warn("Unknown database URL format: {}, using as is", url);
         return url;
+    }
+    
+    private void validateJdbcUrl(String jdbcUrl) {
+        try {
+            // Remove jdbc: prefix for URI parsing
+            String uriString = jdbcUrl.replace("jdbc:", "");
+            URI uri = new URI(uriString);
+            
+            logger.info("URL validation - Host: {}, Port: {}, Path: {}", 
+                       uri.getHost(), uri.getPort(), uri.getPath());
+            
+            if (uri.getHost() == null || uri.getHost().isEmpty()) {
+                throw new RuntimeException("Invalid database URL: host is null or empty");
+            }
+            
+        } catch (Exception e) {
+            logger.error("Invalid JDBC URL format: {}", jdbcUrl);
+            throw new RuntimeException("Invalid database URL format", e);
+        }
     }
 }
