@@ -22,7 +22,7 @@ spring:
 
 # Ollama Configuration
 ollama:
-  base-url: ${OLLAMA_BASE_URL:https://api.ollama.ai}
+  base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
   model: ${OLLAMA_MODEL:llama2}
   embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
   temperature: ${OLLAMA_TEMPERATURE:0.7}

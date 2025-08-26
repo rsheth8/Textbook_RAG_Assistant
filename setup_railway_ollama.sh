@@ -1,0 +1,61 @@
+#!/bin/bash
+
+echo "🚀 Railway Ollama Setup Script"
+echo "=============================="
+
+echo ""
+echo "📋 This script helps you set up Ollama models in Railway"
+echo ""
+
+echo "🔧 Step 1: Access Ollama Service"
+echo "1. Go to your Railway dashboard"
+echo "2. Click on the 'Ollama' service"
+echo "3. Go to the 'Deployments' tab"
+echo "4. Click on the latest deployment"
+echo "5. Go to 'Logs' tab"
+echo ""
+
+echo "📥 Step 2: Install Required Models"
+echo "In the Ollama service logs, you should see model installation progress."
+echo "If not, you can manually install models by:"
+echo ""
+
+echo "Option A: Via Railway Console"
+echo "1. Go to Ollama service → 'Deployments' → 'Console'"
+echo "2. Run these commands:"
+echo "   ollama pull llama2"
+echo "   ollama pull nomic-embed-text"
+echo ""
+
+echo "Option B: Via Open WebUI"
+echo "1. Go to your Open WebUI service URL"
+echo "2. Navigate to 'Models' section"
+echo "3. Download/install: llama2 and nomic-embed-text"
+echo ""
+
+echo "🔗 Step 3: Update App Configuration"
+echo "Once models are installed, update your Textbook_RAG_Assistant environment variables:"
+echo ""
+echo "OLLAMA_BASE_URL=http://ollama:11434"
+echo "OLLAMA_MODEL=llama2"
+echo "OLLAMA_EMBEDDING_MODEL=nomic-embed-text"
+echo "OLLAMA_TEMPERATURE=0.7"
+echo "OLLAMA_MAX_TOKENS=2048"
+echo ""
+
+echo "✅ Step 4: Test Connection"
+echo "After updating variables, your app will redeploy and connect to local Ollama!"
+echo ""
+
+echo "📊 Expected Timeline:"
+echo "- Model installation: 5-15 minutes (depending on model size)"
+echo "- App redeployment: 2-3 minutes"
+echo "- Full setup: ~20 minutes total"
+echo ""
+
+echo "🎯 Benefits of Local Ollama:"
+echo "- ✅ Faster responses (no API latency)"
+echo "- ✅ No API costs"
+echo "- ✅ Full control over models"
+echo "- ✅ Better privacy (everything local)"
+echo "- ✅ Customizable model settings"
