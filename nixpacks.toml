@@ -5,4 +5,4 @@ nixPkgs = ["jdk17", "maven"]
 cmds = ["mvn clean package -DskipTests"]
 
 [start]
-cmd = "java -Xmx2g -Xms1g -XX:+UseG1GC -Dspring.profiles.active=cloud -jar target/textbook-rag-assistant-1.0.0.jar"
+cmd = "java -Xmx2g -Xms1g -XX:+UseG1GC -Dspring.profiles.active=simple -jar target/textbook-rag-assistant-1.0.0.jar"

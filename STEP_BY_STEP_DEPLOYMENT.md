@@ -35,59 +35,50 @@ OLLAMA_MAX_TOKENS=2048
 
 ### **Step 3: Switch to Cloud Profile**
 
-**ONLY AFTER PostgreSQL is ready, update the Railway configuration:**
+**ONLY AFTER PostgreSQL is added and environment variables are set:**
 
-1. **Change `SPRING_PROFILES_ACTIVE` to `cloud`**
-2. **Railway will automatically redeploy**
-3. **Application will now use PostgreSQL instead of H2**
+1. **Update Railway configurations to use `cloud` profile**
+2. **Redeploy the application**
+3. **Test the full RAG system**
 
 ## 🚨 **Why This Order Matters**
 
-### **Current Configuration (Working)**
-- ✅ **Profile**: `simple`
-- ✅ **Database**: H2 in-memory
-- ✅ **Status**: Working and healthy
+### **Current Setup (Working)**
+- ✅ **Profile**: `simple` (H2 in-memory database)
+- ✅ **AI**: Local Ollama (fails in cloud)
+- ✅ **Health Checks**: Working
 
-### **Target Configuration (After PostgreSQL)**
-- 🔄 **Profile**: `cloud`
-- 🔄 **Database**: PostgreSQL
-- 🔄 **Status**: Full RAG system
+### **Target Setup (After Steps)**
+- ✅ **Profile**: `cloud` (PostgreSQL + External Ollama)
+- ✅ **AI**: External Ollama API
+- ✅ **Database**: PostgreSQL
+- ✅ **Full RAG**: Working
 
-## 📋 **Deployment Checklist**
+## 📋 **Checklist**
 
-- [ ] **Step 1**: Add PostgreSQL database to Railway
-- [ ] **Step 2**: Set environment variables
-- [ ] **Step 3**: Change profile to `cloud`
-- [ ] **Step 4**: Test full system
-- [ ] **Step 5**: Upload textbook data
+- [ ] Add PostgreSQL database to Railway
+- [ ] Set environment variables
+- [ ] Switch to `cloud` profile
+- [ ] Test RAG functionality
+- [ ] Upload textbook data
 
 ## 🔍 **Troubleshooting**
 
-### **If Health Checks Fail After Adding PostgreSQL:**
-1. Check if `DATABASE_URL` is set correctly
-2. Verify PostgreSQL service is running
-3. Check application logs in Railway dashboard
+### **If Health Checks Fail**
+- Make sure PostgreSQL is added first
+- Check environment variables are set correctly
+- Verify `DATABASE_URL` is automatically set by Railway
 
-### **If Application Won't Start:**
-1. Make sure PostgreSQL is fully created before switching to `cloud` profile
-2. Verify all environment variables are set
-3. Check Railway logs for specific errors
+### **If AI Responses Fail**
+- Verify `OLLAMA_BASE_URL` is set to `https://api.ollama.ai`
+- Check all Ollama environment variables are configured
+- Ensure `SPRING_PROFILES_ACTIVE=cloud`
 
-## 🎯 **Success Indicators**
+## 🎯 **Expected Timeline**
 
-✅ **Step 1 Complete**: PostgreSQL service appears in Railway dashboard
-✅ **Step 2 Complete**: Environment variables are set
-✅ **Step 3 Complete**: Application redeploys successfully with `cloud` profile
-✅ **Step 4 Complete**: Health checks pass with PostgreSQL
-✅ **Step 5 Complete**: Web interface loads and works
+1. **Add PostgreSQL**: 2-3 minutes
+2. **Set Environment Variables**: 5 minutes
+3. **Switch to Cloud Profile**: 2-3 minutes
+4. **Test System**: 5-10 minutes
 
-## 🚀 **After Success**
-
-Once everything is working:
-1. **Upload your textbook PDFs** via the web interface
-2. **Test RAG queries** to ensure AI responses work
-3. **Share your tool** with others!
-
----
-
-**Follow these steps in order and your RAG system will be fully functional!** 🚀📚✨
+**Total Time**: ~15-20 minutes
