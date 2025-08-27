@@ -42,10 +42,6 @@ public class RailwayDatabaseConfig {
     @Primary
     public DataSource dataSource() {
         logger.info("Configuring Railway database connection...");
-        logger.info("DATABASE_URL: {}", databaseUrl);
-        logger.info("POSTGRES_USER: {}", postgresUser);
-        logger.info("POSTGRES_HOST: {}", postgresHost);
-        logger.info("POSTGRES_DB: {}", postgresDb);
         
         HikariDataSource dataSource = new HikariDataSource();
         
@@ -62,11 +58,8 @@ public class RailwayDatabaseConfig {
                 password = dbUri.getUserInfo().split(":")[1];
                 jdbcUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
                 
-                logger.info("Using DATABASE_URL configuration");
-                logger.info("Host: {}", dbUri.getHost());
-                logger.info("Port: {}", dbUri.getPort());
-                logger.info("Database: {}", dbUri.getPath());
-                logger.info("Username: {}", username);
+                logger.info("Using DATABASE_URL configuration - Host: {}, Database: {}", 
+                    dbUri.getHost(), dbUri.getPath());
                 
             } else {
                 // DATABASE_URL is not resolved, use individual variables
@@ -89,11 +82,8 @@ public class RailwayDatabaseConfig {
                 username = postgresUser;
                 password = postgresPassword;
                 
-                logger.info("Using individual PostgreSQL variables");
-                logger.info("Host: {}", postgresHost);
-                logger.info("Port: {}", postgresPort);
-                logger.info("Database: {}", postgresDb);
-                logger.info("Username: {}", username);
+                logger.info("Using individual PostgreSQL variables - Host: {}, Database: {}", 
+                    postgresHost, postgresDb);
             }
             
             dataSource.setJdbcUrl(jdbcUrl);
@@ -113,10 +103,10 @@ public class RailwayDatabaseConfig {
             
         } catch (URISyntaxException e) {
             logger.error("Failed to parse DATABASE_URL: {}", databaseUrl, e);
-            throw new RuntimeException("Invalid DATABASE_URL format", e);
+            throw new RuntimeException("Invalid DATABASE_URL format: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Failed to configure Railway database", e);
-            throw new RuntimeException("Database configuration failed", e);
+            logger.error("Failed to configure Railway database: {}", e.getMessage());
+            throw new RuntimeException("Database configuration failed: " + e.getMessage());
         }
         
         return dataSource;
