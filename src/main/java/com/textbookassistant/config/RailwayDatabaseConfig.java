@@ -23,28 +23,80 @@ public class RailwayDatabaseConfig {
     @Value("${DATABASE_URL:}")
     private String databaseUrl;
     
+    @Value("${POSTGRES_USER:}")
+    private String postgresUser;
+    
+    @Value("${POSTGRES_PASSWORD:}")
+    private String postgresPassword;
+    
+    @Value("${POSTGRES_HOST:}")
+    private String postgresHost;
+    
+    @Value("${POSTGRES_PORT:5432}")
+    private String postgresPort;
+    
+    @Value("${POSTGRES_DB:}")
+    private String postgresDb;
+    
     @Bean
     @Primary
     public DataSource dataSource() {
         logger.info("Configuring Railway database connection...");
+        logger.info("DATABASE_URL: {}", databaseUrl);
+        logger.info("POSTGRES_USER: {}", postgresUser);
+        logger.info("POSTGRES_HOST: {}", postgresHost);
+        logger.info("POSTGRES_DB: {}", postgresDb);
         
         HikariDataSource dataSource = new HikariDataSource();
         
         try {
-            // Parse Railway's DATABASE_URL
-            URI dbUri = new URI(databaseUrl);
+            String jdbcUrl;
+            String username;
+            String password;
             
-            String username = dbUri.getUserInfo().split(":")[0];
-            String password = dbUri.getUserInfo().split(":")[1];
-            String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
+            // Try to parse DATABASE_URL first
+            if (databaseUrl != null && !databaseUrl.isEmpty() && !databaseUrl.contains("${{")) {
+                // DATABASE_URL is properly resolved
+                URI dbUri = new URI(databaseUrl);
+                username = dbUri.getUserInfo().split(":")[0];
+                password = dbUri.getUserInfo().split(":")[1];
+                jdbcUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
+                
+                logger.info("Using DATABASE_URL configuration");
+                logger.info("Host: {}", dbUri.getHost());
+                logger.info("Port: {}", dbUri.getPort());
+                logger.info("Database: {}", dbUri.getPath());
+                logger.info("Username: {}", username);
+                
+            } else {
+                // DATABASE_URL is not resolved, use individual variables
+                logger.info("DATABASE_URL not resolved, using individual PostgreSQL variables");
+                
+                if (postgresHost == null || postgresHost.isEmpty()) {
+                    throw new RuntimeException("POSTGRES_HOST is not set");
+                }
+                if (postgresUser == null || postgresUser.isEmpty()) {
+                    throw new RuntimeException("POSTGRES_USER is not set");
+                }
+                if (postgresPassword == null || postgresPassword.isEmpty()) {
+                    throw new RuntimeException("POSTGRES_PASSWORD is not set");
+                }
+                if (postgresDb == null || postgresDb.isEmpty()) {
+                    postgresDb = "railway"; // Default Railway database name
+                }
+                
+                jdbcUrl = "jdbc:postgresql://" + postgresHost + ":" + postgresPort + "/" + postgresDb;
+                username = postgresUser;
+                password = postgresPassword;
+                
+                logger.info("Using individual PostgreSQL variables");
+                logger.info("Host: {}", postgresHost);
+                logger.info("Port: {}", postgresPort);
+                logger.info("Database: {}", postgresDb);
+                logger.info("Username: {}", username);
+            }
             
-            logger.info("Parsed Railway DATABASE_URL:");
-            logger.info("Host: {}", dbUri.getHost());
-            logger.info("Port: {}", dbUri.getPort());
-            logger.info("Database: {}", dbUri.getPath());
-            logger.info("Username: {}", username);
-            
-            dataSource.setJdbcUrl(dbUrl);
+            dataSource.setJdbcUrl(jdbcUrl);
             dataSource.setUsername(username);
             dataSource.setPassword(password);
             dataSource.setDriverClassName("org.postgresql.Driver");
