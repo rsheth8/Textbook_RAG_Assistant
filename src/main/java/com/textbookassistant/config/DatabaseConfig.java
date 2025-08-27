@@ -28,22 +28,30 @@ public class DatabaseConfig {
     @Value("${POSTGRES_PASSWORD:}")
     private String postgresPassword;
     
+    @Value("${POSTGRES_HOST:}")
+    private String postgresHost;
+    
+    @Value("${POSTGRES_PORT:5432}")
+    private String postgresPort;
+    
+    @Value("${POSTGRES_DB:}")
+    private String postgresDb;
+    
     @Bean
     public DataSource dataSource() {
         logger.info("Configuring database connection for Railway...");
-        logger.info("DATABASE_URL: {}", databaseUrl != null ? databaseUrl.replaceAll(":[^:@]*@", ":***@") : "NOT SET");
-        logger.info("POSTGRES_USER: {}", postgresUser != null ? postgresUser : "NOT SET");
-        logger.info("POSTGRES_PASSWORD: {}", postgresPassword != null ? "***" : "NOT SET");
         
-        // Check if we have the required environment variables
-        if (databaseUrl == null || databaseUrl.isEmpty()) {
-            logger.warn("⚠️ DATABASE_URL is not set, falling back to H2 in-memory database");
+        // Try multiple ways to get the database URL
+        String finalDatabaseUrl = getDatabaseUrl();
+        
+        if (finalDatabaseUrl == null || finalDatabaseUrl.isEmpty()) {
+            logger.error("❌ No valid database URL found, falling back to H2");
             return createH2DataSource();
         }
         
         try {
             // Convert and validate the URL
-            String jdbcUrl = convertToJdbcUrl(databaseUrl);
+            String jdbcUrl = convertToJdbcUrl(finalDatabaseUrl);
             logger.info("Using JDBC URL: {}", jdbcUrl.replaceAll(":[^:@]*@", ":***@"));
             
             // Validate URL format
@@ -85,6 +93,61 @@ public class DatabaseConfig {
             logger.warn("⚠️ Falling back to H2 in-memory database");
             return createH2DataSource();
         }
+    }
+    
+    private String getDatabaseUrl() {
+        // Method 1: Try DATABASE_URL directly
+        if (databaseUrl != null && !databaseUrl.isEmpty() && !databaseUrl.equals("postgresql://:***@:/")) {
+            logger.info("Using DATABASE_URL from environment: {}", databaseUrl.replaceAll(":[^:@]*@", ":***@"));
+            return databaseUrl;
+        }
+        
+        // Method 2: Try to construct from individual components
+        if (postgresUser != null && !postgresUser.isEmpty() && 
+            postgresPassword != null && !postgresPassword.isEmpty() &&
+            postgresHost != null && !postgresHost.isEmpty()) {
+            
+            String constructedUrl = String.format("postgresql://%s:%s@%s:%s/%s",
+                postgresUser, postgresPassword, postgresHost, postgresPort, 
+                postgresDb != null && !postgresDb.isEmpty() ? postgresDb : "railway");
+            
+            logger.info("Constructed DATABASE_URL from components: {}", constructedUrl.replaceAll(":[^:@]*@", ":***@"));
+            return constructedUrl;
+        }
+        
+        // Method 3: Try common Railway patterns
+        String[] possibleHosts = {"postgres.railway.internal", "localhost", "127.0.0.1"};
+        String[] possibleDbs = {"railway", "postgres", "textbook_assistant"};
+        
+        for (String host : possibleHosts) {
+            for (String db : possibleDbs) {
+                if (postgresUser != null && !postgresUser.isEmpty() && 
+                    postgresPassword != null && !postgresPassword.isEmpty()) {
+                    
+                    String testUrl = String.format("postgresql://%s:%s@%s:%s/%s",
+                        postgresUser, postgresPassword, host, postgresPort, db);
+                    
+                    logger.info("Trying constructed URL: {}", testUrl.replaceAll(":[^:@]*@", ":***@"));
+                    
+                    // Test if this URL works
+                    try {
+                        String jdbcUrl = convertToJdbcUrl(testUrl);
+                        try (Connection testConn = DriverManager.getConnection(jdbcUrl)) {
+                            logger.info("✅ Found working database URL!");
+                            testConn.close();
+                            return testUrl;
+                        } catch (Exception e) {
+                            logger.debug("URL {} failed: {}", testUrl.replaceAll(":[^:@]*@", ":***@"), e.getMessage());
+                        }
+                    } catch (Exception e) {
+                        logger.debug("Invalid URL format: {}", testUrl.replaceAll(":[^:@]*@", ":***@"));
+                    }
+                }
+            }
+        }
+        
+        logger.error("❌ No working database URL found");
+        return null;
     }
     
     private DataSource createH2DataSource() {
