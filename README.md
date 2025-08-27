@@ -114,7 +114,7 @@ PROCESSED_DIR=/tmp/processed
 
 ### **Deployment Features**
 - ✅ **Automatic Health Checks**: `/health` endpoint
-- ✅ **Robust Fallback**: H2 database if PostgreSQL unavailable
+- ✅ **PostgreSQL Only**: Dedicated PostgreSQL database for production reliability
 - ✅ **Enhanced Logging**: Detailed connection and error reporting
 - ✅ **Memory Optimization**: 2GB heap size for large documents
 - ✅ **Connection Pooling**: Optimized for cloud environment
@@ -160,7 +160,7 @@ ollama:
 
 ### **Database Configuration**
 - **Local**: PostgreSQL via Docker Compose
-- **Cloud**: Railway PostgreSQL with H2 fallback
+- **Cloud**: Railway PostgreSQL database
 - **Vector Storage**: pgvector for embeddings
 
 ## 🛠️ **Development**

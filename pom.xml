@@ -56,12 +56,7 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- H2 Database for simple startup -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+
 
         <!-- PDF Processing -->
         <dependency>
