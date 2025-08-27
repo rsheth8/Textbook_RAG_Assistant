@@ -3,9 +3,9 @@ spring:
     name: textbook-rag-assistant
   
   datasource:
-    url: ${DATABASE_URL}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/textbook_assistant}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -13,6 +13,8 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+      # Add connection test query for better error handling
+      connection-test-query: SELECT 1
   
   jpa:
     hibernate:
@@ -60,11 +62,14 @@ app:
   processed:
     dir: ${PROCESSED_DIR:/tmp/processed}
 
-# Logging
+# Logging - Add more detailed logging for debugging
 logging:
   level:
     com.textbookassistant: INFO
     org.springframework.ai: INFO
+    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.boot.autoconfigure.jdbc: DEBUG
+    com.zaxxer.hikari: DEBUG
     root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

@@ -33,7 +33,7 @@ This guide will walk you through deploying your Textbook Assistant to Railway wi
 
 2. **Note Database Credentials**
    - Railway will provide these environment variables:
-     - `DATABASE_URL`
+     - `DATABASE_URL` (most important - contains all connection info)
      - `POSTGRES_USER`
      - `POSTGRES_PASSWORD`
      - `POSTGRES_HOST`
@@ -69,8 +69,11 @@ This guide will walk you through deploying your Textbook Assistant to Railway wi
 
 2. **Set Required Environment Variables**
    ```bash
-   # Database (automatically provided by Railway PostgreSQL)
+   # Spring Profile (CRITICAL - must be set to "cloud")
    SPRING_PROFILES_ACTIVE=cloud
+   
+   # Database configuration (automatically provided by Railway PostgreSQL)
+   # DATABASE_URL, POSTGRES_USER, POSTGRES_PASSWORD are auto-injected
    
    # Ollama Configuration
    OLLAMA_BASE_URL=https://your-ollama-service.railway.app
@@ -121,9 +124,12 @@ This guide will walk you through deploying your Textbook Assistant to Railway wi
 ### Common Issues:
 
 1. **Database Connection Issues**
-   - Verify `SPRING_PROFILES_ACTIVE=cloud`
-   - Check Railway PostgreSQL service is running
-   - Ensure environment variables are set
+   - **Error**: `Driver org.postgresql.Driver claims to not accept jdbcUrl, ${DATABASE_URL}`
+   - **Solution**: 
+     - Ensure `SPRING_PROFILES_ACTIVE=cloud` is set
+     - Check that PostgreSQL service is running (green status)
+     - Verify DATABASE_URL is properly injected by Railway
+     - Check application logs for database configuration debug info
 
 2. **Ollama Connection Issues**
    - Verify `OLLAMA_BASE_URL` is correct
@@ -134,6 +140,24 @@ This guide will walk you through deploying your Textbook Assistant to Railway wi
    - Check build logs for compilation errors
    - Verify Java 17 is specified in `system.properties`
    - Check memory allocation in `railway.toml`
+
+### Debugging Database Issues:
+
+1. **Check Environment Variables**
+   - In Railway dashboard, go to your app service
+   - Check "Variables" tab
+   - Ensure `SPRING_PROFILES_ACTIVE=cloud` is set
+   - Verify `DATABASE_URL` is present (auto-injected by PostgreSQL service)
+
+2. **Check Application Logs**
+   - Look for "Database Configuration Debug" section
+   - Verify DATABASE_URL is being parsed correctly
+   - Check for any parsing errors
+
+3. **Verify Service Links**
+   - Ensure PostgreSQL service is in the same project
+   - Check that services are properly linked
+   - Verify PostgreSQL service is running (green status)
 
 ### Useful Commands:
 
