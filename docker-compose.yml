@@ -19,6 +19,23 @@ services:
       timeout: 5s
       retries: 5
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: textbook_assistant_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
   app:
     build: .
     container_name: textbook_assistant_app
@@ -28,14 +45,17 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/textbook_assistant
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_BASE_URL: http://ollama:11434
       SPRING_PROFILES_ACTIVE: docker
     volumes:
       - ./data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  ollama_data:
