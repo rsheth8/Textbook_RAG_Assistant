@@ -33,10 +33,7 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
-  # Disable problematic auto-configurations
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+
 
 # Ollama Configuration
 ollama:
@@ -93,20 +90,4 @@ management:
       enabled: true
     defaults:
       enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: false
-    enable:
-      jvm: true
-      process: true
-      system: false
-      processor: false
-      disk: false
-    binders:
-      processor:
-        enabled: false
-      system:
-        enabled: false
-      disk:
-        enabled: false
+
