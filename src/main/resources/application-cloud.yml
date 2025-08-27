@@ -17,9 +17,11 @@ spring:
   
   # Alternative database configuration using individual properties
   datasource:
-    url: ${DATABASE_URL}
-    username: ${PGUSER}
-    password: ${PGPASSWORD}
+    host: ${POSTGRES_HOST}
+    port: ${POSTGRES_PORT}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    database: ${POSTGRES_DB}
     # url: ${DATABASE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:railway}}
     # username: ${PGUSER:postgres}
     # password: ${PGPASSWORD:}
