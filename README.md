@@ -88,25 +88,29 @@ The following environment variables are configured in Railway:
 
 #### **Ollama Configuration**
 ```
-OLLAMA_BASE_URL=https://api.ollama.ai
+OLLAMA_BASE_URL=http://ollama.railway.internal:11434
 OLLAMA_MODEL=llama2
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 OLLAMA_TEMPERATURE=0.7
 OLLAMA_MAX_TOKENS=2048
 ```
 
+#### **Database Configuration**
+```
+DATABASE_URL=postgresql://postgres:***@maglev.proxy.rlwy.net:55026/railway
+POSTGRES_USER=postgres
+POSTGRES_DB=railway
+```
+
 #### **Application Configuration**
 ```
+SPRING_PROFILES_ACTIVE=cloud
 CHUNK_SIZE=300
 CHUNK_OVERLAP=50
 MAX_RETRIEVAL_RESULTS=3
 UPLOAD_DIR=/tmp/uploads
 PROCESSED_DIR=/tmp/processed
 ```
-
-#### **Database Configuration**
-- **PostgreSQL**: Automatically provided by Railway
-- **Fallback**: H2 in-memory database if PostgreSQL fails
 
 ### **Deployment Features**
 - ✅ **Automatic Health Checks**: `/health` endpoint
