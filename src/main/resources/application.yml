@@ -62,3 +62,10 @@ management:
   health:
     db:
       enabled: true
+  metrics:
+    enable:
+      jvm: true
+      process: true
+      system: false
+      processor: false
+      disk: false

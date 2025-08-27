@@ -88,3 +88,13 @@ management:
       enabled: true
     defaults:
       enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+    enable:
+      jvm: true
+      process: true
+      system: false
+      processor: false
+      disk: false
