@@ -28,7 +28,7 @@ RUN mkdir -p data/uploads data/processed
 EXPOSE 8080
 
 # Set environment variables
-ENV SPRING_PROFILES_ACTIVE=docker
+ENV SPRING_PROFILES_ACTIVE=cloud
 
 # Run the application
 CMD ["java", "-jar", "target/textbook-rag-assistant-1.0.0.jar"]
