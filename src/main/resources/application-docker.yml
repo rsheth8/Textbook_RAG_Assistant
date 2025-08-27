@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: textbook-rag-assistant
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/textbook_assistant
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# Spring AI Configuration - Simple and Clean
+spring.ai:
+  ollama:
+    base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
+    chat:
+      options:
+        model: qwen3:0.6b
+        temperature: 0.7
+    embedding:
+      options:
+        model: nomic-embed-text
+
+# Ollama Configuration (legacy)
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
+  model: qwen3:0.6b
+  embedding-model: nomic-embed-text
+  temperature: 0.7
+  max-tokens: 2048
+
+# Application Configuration
+app:
+  chunk:
+    size: 300
+    overlap: 50
+  max-retrieval-results: 3
+  upload:
+    dir: /app/data/uploads
+  processed:
+    dir: /app/data/processed
+
+# Logging
+logging:
+  level:
+    com.textbookassistant: INFO
+    org.springframework.ai: INFO
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Server configuration
+server:
+  port: 8080
+
+# Simple Actuator - Just Health Check
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    enable:
+      all: false
+      jvm: false
+      process: false
+      system: false
+      processor: false
+      disk: false
+      tomcat: false
+      http: false
+      hikaricp: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.tomcat.TomcatMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.web.servlet.WebMvcMetricsAutoConfiguration

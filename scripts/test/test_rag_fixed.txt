@@ -1,9 +1,0 @@
-Linear algebra is a branch of mathematics that deals with vectors, vector spaces, linear transformations, and systems of linear equations. 
-
-A matrix is a rectangular array of numbers, symbols, or expressions arranged in rows and columns. Matrices are used to represent linear transformations and solve systems of linear equations.
-
-A vector is a mathematical object that has both magnitude and direction. In linear algebra, vectors are typically represented as ordered lists of numbers.
-
-The determinant of a square matrix is a scalar value that can be computed from the elements of the matrix. It is used to determine if a matrix is invertible and to solve systems of linear equations.
-
-Eigenvalues and eigenvectors are important concepts in linear algebra. An eigenvector of a square matrix is a non-zero vector that, when multiplied by the matrix, results in a scalar multiple of itself.

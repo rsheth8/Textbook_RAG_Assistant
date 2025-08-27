@@ -1,7 +1,6 @@
 package com.textbookassistant.service;
 
 import com.textbookassistant.model.Document;
-import com.textbookassistant.model.Document.ProcessingStatus;
 import com.textbookassistant.repository.DocumentRepository;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -18,7 +17,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class PdfProcessingService {
@@ -26,177 +24,105 @@ public class PdfProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PdfProcessingService.class);
     
     private final DocumentRepository documentRepository;
-    private final RagService ragService;
     
-    @Value("${app.upload.dir}")
+    @Value("${app.upload-dir:data/uploads}")
     private String uploadDir;
     
-    @Value("${app.chunk.size}")
-    private int chunkSize;
+    @Value("${app.processed-dir:data/processed}")
+    private String processedDir;
     
-    @Value("${app.chunk.overlap}")
-    private int chunkOverlap;
-    
-    public PdfProcessingService(DocumentRepository documentRepository, RagService ragService) {
+    public PdfProcessingService(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
-        this.ragService = ragService;
     }
     
     public Document processPdfUpload(MultipartFile file) throws IOException {
+        logger.info("Processing PDF upload: {}", file.getOriginalFilename());
+        
         // Validate file
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File is empty");
         }
         
-        String contentType = file.getContentType();
-        if (contentType == null || (!contentType.equals("application/pdf") && !contentType.startsWith("text/"))) {
-            throw new IllegalArgumentException("File must be a PDF or text file");
+        if (!file.getContentType().equals("application/pdf")) {
+            throw new IllegalArgumentException("File must be a PDF");
         }
         
-        // Create upload directory if it doesn't exist
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
+        // Create directories if they don't exist
+        createDirectoriesIfNotExist();
         
         // Generate unique filename
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-        Path filePath = uploadPath.resolve(uniqueFilename);
+        String uniqueFilename = generateUniqueFilename(originalFilename);
+        String filePath = Paths.get(uploadDir, uniqueFilename).toString();
         
-        // Save file
-        Files.copy(file.getInputStream(), filePath);
+        // Save file to disk
+        File savedFile = new File(filePath);
+        file.transferTo(savedFile);
         
         // Create document record
-        Document document = new Document(
-            uniqueFilename,
-            originalFilename,
-            filePath.toString(),
-            file.getSize(),
-            file.getContentType()
-        );
+        Document document = new Document();
+        document.setFilename(uniqueFilename);
+        document.setOriginalFilename(originalFilename);
+        document.setFilePath(filePath);
+        document.setFileSize(file.getSize());
+        document.setContentType(file.getContentType());
+        document.setStatus(Document.ProcessingStatus.UPLOADED);
+        document.setUploadedAt(LocalDateTime.now());
         
         document = documentRepository.save(document);
         
-        // Process PDF asynchronously
-        processPdfAsync(document);
-        
-        return document;
-    }
-    
-    private void processPdfAsync(Document document) {
-        // In a real application, you would use @Async or a message queue
-        // For simplicity, we'll process synchronously here
         try {
-            processPdfContent(document);
+            // Extract text from PDF
+            String extractedText = extractTextFromPdf(savedFile);
+            
+            // Update document with extracted text
+            document.setExtractedText(extractedText);
+            document.setStatus(Document.ProcessingStatus.COMPLETED);
+            document.setProcessedAt(LocalDateTime.now());
+            
+            document = documentRepository.save(document);
+            
+            logger.info("Successfully processed PDF: {} ({} characters extracted)", 
+                       originalFilename, extractedText.length());
+            
+            return document;
+            
         } catch (Exception e) {
             logger.error("Error processing PDF: {}", e.getMessage(), e);
-            document.setStatus(ProcessingStatus.FAILED);
+            
+            // Update document with error status
+            document.setStatus(Document.ProcessingStatus.FAILED);
             document.setErrorMessage(e.getMessage());
             documentRepository.save(document);
+            
+            throw new RuntimeException("Failed to process PDF", e);
         }
     }
     
-    private void processPdfContent(Document document) throws IOException {
-        logger.info("Processing file: {}", document.getOriginalFilename());
-        
-        document.setStatus(ProcessingStatus.PROCESSING);
-        documentRepository.save(document);
-        
-        // Check if it's a text file or PDF
-        String contentType = document.getContentType();
-        if (contentType != null && contentType.startsWith("text/")) {
-            // Handle text files
-            processTextFile(document);
-        } else {
-            // Handle PDF files
-            processPdfPageByPage(document);
-        }
-        
-        document.setStatus(ProcessingStatus.COMPLETED);
-        document.setProcessedAt(LocalDateTime.now());
-        documentRepository.save(document);
-        
-        logger.info("File processing completed");
+    private void createDirectoriesIfNotExist() throws IOException {
+        Files.createDirectories(Paths.get(uploadDir));
+        Files.createDirectories(Paths.get(processedDir));
     }
     
-    private void processTextFile(Document document) throws IOException {
-        logger.info("Processing text file: {}", document.getOriginalFilename());
-        
-        // Read the text file directly
-        String content = new String(java.nio.file.Files.readAllBytes(java.nio.file.Path.of(document.getFilePath())));
-        
-        // Store the extracted text
-        document.setExtractedText(content);
-        documentRepository.save(document);
-        
-        // Process for RAG with error handling
-        try {
-            logger.info("Starting RAG processing for text file: {}", document.getOriginalFilename());
-            ragService.processTextChunks(document.getId(), content);
-            logger.info("Text file RAG processing completed successfully");
-        } catch (Exception e) {
-            logger.error("RAG processing failed for text file: {}", e.getMessage(), e);
-            // Don't fail the entire process, just log the error and continue
+    private String generateUniqueFilename(String originalFilename) {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        
-        logger.info("Text file processing completed");
+        return timestamp + extension;
     }
     
-    private void processPdfPageByPage(Document document) throws IOException {
-        try (PDDocument pdfDocument = PDDocument.load(new File(document.getFilePath()))) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(true);
-            
-            int totalPages = pdfDocument.getNumberOfPages();
-            StringBuilder fullText = new StringBuilder();
-            
-            // Process pages in batches to manage memory
-            int batchSize = 10; // Process 10 pages at a time
-            for (int startPage = 1; startPage <= totalPages; startPage += batchSize) {
-                int endPage = Math.min(startPage + batchSize - 1, totalPages);
-                
-                stripper.setStartPage(startPage);
-                stripper.setEndPage(endPage);
-                String pageText = stripper.getText(pdfDocument);
-                
-                fullText.append(pageText).append("\n\n");
-                
-                            // Skip RAG processing for now to test basic functionality
-            // if (fullText.length() > 50000) { // Process when we have ~50KB of text
-            //     ragService.processTextChunks(document.getId(), fullText.toString());
-            //     fullText.setLength(0); // Clear the buffer
-            //     System.gc(); // Force garbage collection
-            // }
-                
-                logger.info("Processed pages {}-{} of {}", startPage, endPage, totalPages);
-            }
-            
-            // Store the extracted text
-            document.setExtractedText(fullText.toString());
-            documentRepository.save(document);
-            
-            // Skip RAG processing for now - focus on testing queries
-            // try {
-            //     if (fullText.length() > 0) {
-            //         logger.info("Starting RAG processing for PDF: {}", document.getOriginalFilename());
-            //         ragService.processTextChunks(document.getId(), fullText.toString());
-            //         logger.info("PDF RAG processing completed successfully");
-            //     }
-            // } catch (Exception e) {
-            //     logger.error("RAG processing failed for PDF: {}", e.getMessage(), e);
-            //     // Don't fail the entire process, just log the error and continue
-            // }
-        }
-    }
-    
-    private String extractTextFromPdf(String filePath) throws IOException {
-        try (PDDocument document = PDDocument.load(new File(filePath))) {
+    private String extractTextFromPdf(File pdfFile) throws IOException {
+        try (PDDocument document = PDDocument.load(pdfFile)) {
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
             return stripper.getText(document);
         }
+    }
+    
+    public List<Document> getAllDocuments() {
+        return documentRepository.findAll();
     }
     
     public Document getDocumentById(Long id) {
@@ -204,19 +130,10 @@ public class PdfProcessingService {
             .orElseThrow(() -> new IllegalArgumentException("Document not found with id: " + id));
     }
     
-    public Document getDocumentByFilename(String filename) {
-        return documentRepository.findByFilename(filename)
-            .orElseThrow(() -> new IllegalArgumentException("Document not found with filename: " + filename));
-    }
-    
-    public List<Document> getAllDocuments() {
-        return documentRepository.findAllByOrderByUploadedAtDesc();
-    }
-    
     public void deleteDocument(Long id) {
         Document document = getDocumentById(id);
         
-        // Delete file from filesystem
+        // Delete file from disk
         try {
             Path filePath = Paths.get(document.getFilePath());
             Files.deleteIfExists(filePath);
@@ -225,6 +142,6 @@ public class PdfProcessingService {
         }
         
         // Delete from database
-        documentRepository.delete(document);
+        documentRepository.deleteById(id);
     }
 }

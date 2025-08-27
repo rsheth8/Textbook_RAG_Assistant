@@ -5,7 +5,7 @@ import com.textbookassistant.dto.QueryResponse;
 import com.textbookassistant.dto.UploadResponse;
 import com.textbookassistant.model.Document;
 import com.textbookassistant.service.PdfProcessingService;
-import com.textbookassistant.service.RagService;
+import com.textbookassistant.service.SpringAiRagService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +26,9 @@ public class RagController {
     private static final Logger logger = LoggerFactory.getLogger(RagController.class);
     
     private final PdfProcessingService pdfProcessingService;
-    private final RagService ragService;
+    private final SpringAiRagService ragService;
     
-    public RagController(PdfProcessingService pdfProcessingService, RagService ragService) {
+    public RagController(PdfProcessingService pdfProcessingService, SpringAiRagService ragService) {
         this.pdfProcessingService = pdfProcessingService;
         this.ragService = ragService;
     }
@@ -116,6 +116,4 @@ public class RagController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-
 }

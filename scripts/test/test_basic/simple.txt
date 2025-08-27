@@ -1,3 +1,0 @@
-This is a simple test file.
-It contains basic text content.
-No complex formatting or large amounts of data.

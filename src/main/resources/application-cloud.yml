@@ -1,64 +1,53 @@
 spring:
   application:
     name: textbook-rag-assistant
-
+  
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
         jdbc:
-          time_zone: UTC
-        connection:
-          provider_disables_autocommit: true
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
 
-  # Alternative database configuration using individual properties
-  datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-    host: ${POSTGRES_HOST}
-    port: ${POSTGRES_PORT}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-    database: ${POSTGRES_DB}
-    # url: ${DATABASE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:railway}}
-    # username: ${PGUSER:postgres}
-    # password: ${PGPASSWORD:}
-    driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
 
-<<<<<<< HEAD
-
-=======
-  spring.ai:
-    ollama:
-      base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
-      init:
-        pull-model-strategy: always
-        timeout: 60s
-        max-retries: 1
-        chat:
-          additional-models:
-            - qwen3:0.6b
-            - gemma3:270m
-      embedding.options.model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
-      chat.options:
-        model: gemma3:270m # Or your chosen model
+# Spring AI Configuration
+spring.ai:
+  ollama:
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    chat:
+      options:
+        model: ${OLLAMA_MODEL:phi3}
         temperature: ${OLLAMA_TEMPERATURE:0.7}
->>>>>>> 4b69b532f527ec57b083cda8fcd0ee0ed2b1e8d2
-
-# Ollama Configuration
-ollama:
-  base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
-  model: ${OLLAMA_MODEL:llama2}
-  embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
-  temperature: ${OLLAMA_TEMPERATURE:0.7}
-  max-tokens: ${OLLAMA_MAX_TOKENS:2048}
+        max-tokens: ${OLLAMA_MAX_TOKENS:2048}
+    embedding:
+      options:
+        model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+  
+  vectorstore:
+    pgvector:
+      dimensions: 768
+      initialize-schema: true
 
 # Application Configuration
 app:
@@ -76,10 +65,6 @@ logging:
   level:
     com.textbookassistant: INFO
     org.springframework.ai: INFO
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
-    org.postgresql: DEBUG
-    com.zaxxer.hikari: DEBUG
     root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
@@ -87,35 +72,21 @@ logging:
 # Server configuration
 server:
   port: ${PORT:8080}
-  compression:
-    enabled: true
-    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
 
-# Spring Boot Actuator Configuration
+# Actuator - Disable problematic metrics
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
-<<<<<<< HEAD
-        # include: health,info,env
-  #     base-path: /actuator
-  # endpoint:
-  #   health:
-  #     show-details: when-authorized
-=======
-      base-path: /actuator
+        include: health
   endpoint:
     health:
-      show-details: always
->>>>>>> 4b69b532f527ec57b083cda8fcd0ee0ed2b1e8d2
-  #     show-components: always
-  # health:
-  #   db:
-  #     enabled: true
-  #   defaults:
-  #     enabled: true
-<<<<<<< HEAD
+      show-details: never
+  metrics:
+    export:
+      simple:
+        enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
 
-=======
->>>>>>> 4b69b532f527ec57b083cda8fcd0ee0ed2b1e8d2

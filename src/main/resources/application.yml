@@ -4,8 +4,8 @@ spring:
   
   datasource:
     url: jdbc:postgresql://localhost:5432/textbook_assistant
-    username: ${POSTGRES_USER:textbook_user}
-    password: ${POSTGRES_PASSWORD:password}
+    username: postgres
+    password: password
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -15,57 +15,67 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-  
+
   servlet:
     multipart:
-      max-file-size: 100MB  # Increased for large PDFs
-      max-request-size: 100MB  # Increased for large PDFs
+      max-file-size: 50MB
+      max-request-size: 50MB
 
-# Ollama Configuration
-ollama:
-  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
-  model: ${OLLAMA_MODEL:llama2}
-  embedding-model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
-  temperature: ${OLLAMA_TEMPERATURE:0.7}
-  max-tokens: ${OLLAMA_MAX_TOKENS:2048}
+# Spring AI Configuration
+spring.ai:
+  ollama:
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    chat:
+      options:
+        model: ${OLLAMA_MODEL:phi3}
+        temperature: ${OLLAMA_TEMPERATURE:0.7}
+        max-tokens: ${OLLAMA_MAX_TOKENS:2048}
+    embedding:
+      options:
+        model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+  
+  vectorstore:
+    pgvector:
+      dimensions: 768
+      initialize-schema: true
 
 # Application Configuration
 app:
   chunk:
-    size: ${CHUNK_SIZE:500}  # Smaller chunks for faster processing
-    overlap: ${CHUNK_OVERLAP:100}  # Less overlap for efficiency
-  max-retrieval-results: ${MAX_RETRIEVAL_RESULTS:5}  # Fewer results for faster queries
+    size: ${CHUNK_SIZE:300}
+    overlap: ${CHUNK_OVERLAP:50}
+  max-retrieval-results: ${MAX_RETRIEVAL_RESULTS:3}
   upload:
-    dir: ${UPLOAD_DIR:./data/uploads}
+    dir: ${UPLOAD_DIR:data/uploads}
   processed:
-    dir: ${PROCESSED_DIR:./data/processed}
+    dir: ${PROCESSED_DIR:data/processed}
 
 # Logging
 logging:
   level:
-    com.textbookassistant: DEBUG
-    org.springframework.ai: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.textbookassistant: INFO
+    org.springframework.ai: INFO
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
-# Spring Boot Actuator Configuration
+# Server configuration
+server:
+  port: 8080
+
+# Actuator - Disable problematic metrics
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
-      base-path: /actuator
+        include: health
   endpoint:
     health:
-      show-details: when-authorized
-  health:
-    db:
-      enabled: true
+      show-details: never
   metrics:
-    enable:
-      jvm: true
-      process: true
-      system: false
-      processor: false
-      disk: false
+    export:
+      simple:
+        enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration

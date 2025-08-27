@@ -13,10 +13,6 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
     
     List<DocumentChunk> findByDocumentIdOrderByChunkIndex(Long documentId);
     
-    // Find all chunks from textbook documents (documents 75-148 are the textbook chunks)
-    @Query("SELECT dc FROM DocumentChunk dc WHERE dc.documentId >= 75 AND dc.documentId <= 148 ORDER BY dc.documentId, dc.chunkIndex")
-    List<DocumentChunk> findAllTextbookChunks();
-    
     @Query("SELECT dc FROM DocumentChunk dc WHERE dc.documentId = :documentId")
     List<DocumentChunk> findAllByDocumentId(@Param("documentId") Long documentId);
     

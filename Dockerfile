@@ -22,7 +22,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # Create data directories
-RUN mkdir -p data/uploads data/processed
+RUN mkdir -p /app/data/uploads /app/data/processed
 
 # Expose port
 EXPOSE 8080
@@ -31,4 +31,4 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=cloud
 
 # Run the application
-CMD ["java", "-jar", "target/textbook-rag-assistant-1.0.0.jar"]
+CMD ["java", "-Xmx2g", "-jar", "target/textbook-rag-assistant-1.0.0.jar"]

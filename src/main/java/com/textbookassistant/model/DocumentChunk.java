@@ -2,7 +2,6 @@ package com.textbookassistant.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "document_chunks")
@@ -20,9 +19,6 @@ public class DocumentChunk {
     
     @Column(nullable = false)
     private Integer chunkIndex;
-    
-    @Column(columnDefinition = "TEXT")
-    private String embedding;
     
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -70,14 +66,6 @@ public class DocumentChunk {
     
     public void setChunkIndex(Integer chunkIndex) {
         this.chunkIndex = chunkIndex;
-    }
-    
-    public String getEmbedding() {
-        return embedding;
-    }
-    
-    public void setEmbedding(String embedding) {
-        this.embedding = embedding;
     }
     
     public LocalDateTime getCreatedAt() {

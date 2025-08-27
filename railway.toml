@@ -1,5 +1,28 @@
+[build]
+builder = "nixpacks"
+
 [deploy]
-startCommand = "java -Xmx2g -Xms1g -XX:+UseG1GC -Dspring.profiles.active=cloud -jar target/textbook-rag-assistant-1.0.0.jar"
-healthcheckPath = "/actuator/health"
-healthcheckTimeout = 600
-restartPolicyType = "ON_FAILURE"
+startCommand = "java -Xmx2g -jar target/textbook-rag-assistant-1.0.0.jar"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[env]
+SPRING_PROFILES_ACTIVE = "cloud"
+# Database configuration will be automatically provided by Railway PostgreSQL service
+# DATABASE_URL, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT
+
+# Spring AI Configuration
+OLLAMA_BASE_URL = "https://your-ollama-instance.com"  # Update with your Ollama URL
+OLLAMA_MODEL = "phi3"
+OLLAMA_TEMPERATURE = "0.7"
+OLLAMA_MAX_TOKENS = "2048"
+OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
+
+# Application Configuration
+CHUNK_SIZE = "300"
+CHUNK_OVERLAP = "50"
+MAX_RETRIEVAL_RESULTS = "3"
+UPLOAD_DIR = "/tmp/uploads"
+PROCESSED_DIR = "/tmp/processed"

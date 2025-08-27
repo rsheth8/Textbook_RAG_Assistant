@@ -132,16 +132,10 @@ env.bak/
 venv.bak/
 
 # Application data (keep structure but ignore content)
-data/chunks/
-data/uploads/
-data/processed/
-data/pdf_chunks/
-data/pdf_chunks_small/
-data/pdf_chunks_smart/
-data/organized_chapters/
-scripts/logs/
-target/
+data/uploads/*
+data/processed/*
+!data/uploads/.gitkeep
+!data/processed/.gitkeep
 
-# Keep important data files but ignore large content
-!data/chapter_mapping.json
-!data/backups/*.sql
+# Build and target
+target/

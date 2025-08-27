@@ -11,9 +11,9 @@ done
 
 echo "✅ Ollama is ready!"
 
-# Pull the required models
-echo "📥 Pulling llama2 model for chat..."
-curl -X POST http://localhost:11434/api/pull -d '{"name": "llama2"}'
+       # Pull the required models
+       echo "📥 Pulling qwen3:0.6b model for chat..."
+       curl -X POST http://localhost:11434/api/pull -d '{"name": "qwen3:0.6b"}'
 
 echo "📥 Pulling nomic-embed-text model for embeddings..."
 curl -X POST http://localhost:11434/api/pull -d '{"name": "nomic-embed-text"}'

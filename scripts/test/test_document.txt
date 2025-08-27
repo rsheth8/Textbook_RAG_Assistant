@@ -1,1 +1,0 @@
-This is a test document for linear algebra. It contains basic concepts like matrices, vectors, and linear transformations. We will use this to test the RAG system.
