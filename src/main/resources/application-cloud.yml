@@ -17,6 +17,7 @@ spring:
   
   # Alternative database configuration using individual properties
   datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     host: ${POSTGRES_HOST}
     port: ${POSTGRES_PORT}
     username: ${POSTGRES_USER}
