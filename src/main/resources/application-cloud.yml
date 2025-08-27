@@ -98,3 +98,16 @@ management:
       system: false
       processor: false
       disk: false
+    binders:
+      processor:
+        enabled: false
+      system:
+        enabled: false
+      disk:
+        enabled: false
+
+# Disable problematic auto-configurations
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration

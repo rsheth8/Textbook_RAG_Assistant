@@ -1,5 +1,5 @@
 [deploy]
-startCommand = "java -Xmx2g -Xms1g -XX:+UseG1GC -Dspring.profiles.active=cloud -Dmanagement.metrics.enable.system=false -Dmanagement.metrics.enable.processor=false -Dmanagement.metrics.enable.disk=false -jar target/textbook-rag-assistant-1.0.0.jar"
+startCommand = "java -Xmx2g -Xms1g -XX:+UseG1GC -Dspring.profiles.active=cloud -Dmanagement.metrics.enable.system=false -Dmanagement.metrics.enable.processor=false -Dmanagement.metrics.enable.disk=false -Dmanagement.metrics.binders.processor.enabled=false -Dmanagement.metrics.binders.system.enabled=false -Dmanagement.metrics.binders.disk.enabled=false -jar target/textbook-rag-assistant-1.0.0.jar"
 healthcheckPath = "/actuator/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
