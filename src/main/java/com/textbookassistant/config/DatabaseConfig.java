@@ -116,7 +116,7 @@ public class DatabaseConfig {
         }
         
         // Method 3: Try common Railway patterns
-        String[] possibleHosts = {"postgres.railway.internal", "localhost", "127.0.0.1"};
+        String[] possibleHosts = {"maglev.proxy.rlwy.net", "postgres.railway.internal", "localhost", "127.0.0.1"};
         String[] possibleDbs = {"railway", "postgres", "textbook_assistant"};
         
         for (String host : possibleHosts) {

@@ -31,6 +31,9 @@ echo "🌐 Network Connectivity Tests:"
 echo "Testing postgres.railway.internal:5432..."
 nc -zv postgres.railway.internal 5432 2>&1 || echo "❌ Failed to connect to postgres.railway.internal:5432"
 
+echo "Testing maglev.proxy.rlwy.net:55026..."
+nc -zv maglev.proxy.rlwy.net 55026 2>&1 || echo "❌ Failed to connect to maglev.proxy.rlwy.net:55026"
+
 if [ ! -z "$RAILWAY_PRIVATE_DOMAIN" ]; then
     echo "Testing $RAILWAY_PRIVATE_DOMAIN:5432..."
     nc -zv $RAILWAY_PRIVATE_DOMAIN 5432 2>&1 || echo "❌ Failed to connect to $RAILWAY_PRIVATE_DOMAIN:5432"
