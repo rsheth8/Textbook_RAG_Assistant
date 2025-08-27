@@ -1,6 +1,15 @@
-version: '3.8'
+version: "3.8"
 
 services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434" # Exposes Ollama API port
+    volumes:
+      - ollama_data:/root/.ollama # Persistent storage for models and data
+    restart: always
+
   postgres:
     image: pgvector/pgvector:pg16
     container_name: textbook_assistant_db
@@ -12,7 +21,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
+      # - ./scripts/setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s

@@ -14,7 +14,7 @@ spring:
           time_zone: UTC
         connection:
           provider_disables_autocommit: true
-  
+
   # Alternative database configuration using individual properties
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -27,13 +27,30 @@ spring:
     # username: ${PGUSER:postgres}
     # password: ${PGPASSWORD:}
     driver-class-name: org.postgresql.Driver
-    
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
 
+<<<<<<< HEAD
 
+=======
+  spring.ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
+      init:
+        pull-model-strategy: always
+        timeout: 60s
+        max-retries: 1
+        chat:
+          additional-models:
+            - qwen3:0.6b
+            - gemma3:270m
+      embedding.options.model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
+      chat.options:
+        model: gemma3:270m # Or your chosen model
+        temperature: ${OLLAMA_TEMPERATURE:0.7}
+>>>>>>> 4b69b532f527ec57b083cda8fcd0ee0ed2b1e8d2
 
 # Ollama Configuration
 ollama:
@@ -80,15 +97,25 @@ management:
     web:
       exposure:
         include: "*"
+<<<<<<< HEAD
         # include: health,info,env
   #     base-path: /actuator
   # endpoint:
   #   health:
   #     show-details: when-authorized
+=======
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+>>>>>>> 4b69b532f527ec57b083cda8fcd0ee0ed2b1e8d2
   #     show-components: always
   # health:
   #   db:
   #     enabled: true
   #   defaults:
   #     enabled: true
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4b69b532f527ec57b083cda8fcd0ee0ed2b1e8d2
