@@ -33,6 +33,11 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
+  # Disable problematic auto-configurations
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+
 # Ollama Configuration
 ollama:
   base-url: ${OLLAMA_BASE_URL:http://ollama:11434}
@@ -105,9 +110,3 @@ management:
         enabled: false
       disk:
         enabled: false
-
-# Disable problematic auto-configurations
-spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
