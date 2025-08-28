@@ -98,8 +98,10 @@ public class SpringAiRagService {
                 );
             }
             
-            // Generate AI response based on the relevant content
-            String response = generateResponse(request, relevantContent);
+                               // Generate AI response based on the relevant content
+                   logger.info("About to generate AI response for query: {}", request.getQuery());
+                   String response = generateResponse(request, relevantContent);
+                   logger.info("Successfully generated AI response");
             
             return new QueryResponse(
                 response,
@@ -195,9 +197,10 @@ public class SpringAiRagService {
     /**
      * Generate an AI response based on the relevant content using Ollama API directly
      */
-    private String generateResponse(QueryRequest request, String relevantContent) {
-        try {
-            logger.info("Generating AI response for query: {}", request.getQuery());
+               private String generateResponse(QueryRequest request, String relevantContent) {
+               try {
+                   logger.info("Generating AI response for query: {}", request.getQuery());
+                   logger.info("Relevant content length: {}", relevantContent.length());
             
             // Extract only the most relevant snippet (first 200 characters max)
             // This prevents sending large chunks of textbook text to the AI
@@ -233,9 +236,10 @@ public class SpringAiRagService {
                        "stream", false
                    );
             
-            // Call Ollama API directly
-            String ollamaUrl = ollamaBaseUrl + "/api/generate";
-            logger.info("Calling Ollama directly at: {}", ollamaUrl);
+                               // Call Ollama API directly
+                   String ollamaUrl = ollamaBaseUrl + "/api/generate";
+                   logger.info("Calling Ollama directly at: {}", ollamaUrl);
+                   logger.info("Request payload: {}", requestPayload);
             
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
