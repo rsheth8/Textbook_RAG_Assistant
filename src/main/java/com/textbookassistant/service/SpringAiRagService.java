@@ -282,10 +282,17 @@ public class SpringAiRagService {
                    headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
                    
                    // Add API key if available for Open WebUI
+                   logger.info("Open WebUI URL: '{}'", openWebUiUrl);
+                   logger.info("Open WebUI API Key: '{}'", openWebUiApiKey != null ? openWebUiApiKey.substring(0, Math.min(10, openWebUiApiKey.length())) + "..." : "null");
+                   
                    if (openWebUiUrl != null && !openWebUiUrl.trim().isEmpty() && 
                        openWebUiApiKey != null && !openWebUiApiKey.trim().isEmpty()) {
                        headers.set("Authorization", "Bearer " + openWebUiApiKey);
                        logger.info("Added API key to request headers");
+                   } else {
+                       logger.warn("API key not available - URL: {}, API Key: {}", 
+                           openWebUiUrl != null && !openWebUiUrl.trim().isEmpty(),
+                           openWebUiApiKey != null && !openWebUiApiKey.trim().isEmpty());
                    }
             
             org.springframework.http.HttpEntity<Map<String, Object>> entity = 
