@@ -232,7 +232,7 @@ public class SpringAiRagService {
             );
             
             // Call Ollama API directly
-            String ollamaUrl = "http://ollama-production-604a.up.railway.app:11434/api/generate";
+            String ollamaUrl = ollamaBaseUrl + "/api/generate";
             logger.info("Calling Ollama directly at: {}", ollamaUrl);
             
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
