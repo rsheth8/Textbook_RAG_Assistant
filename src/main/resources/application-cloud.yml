@@ -39,7 +39,7 @@ spring.ai:
     base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
     chat:
       options:
-        model: ${OLLAMA_MODEL:phi3}
+        model: ${OLLAMA_MODEL:qwen2.5:0.5b}
         temperature: ${OLLAMA_TEMPERATURE:0.7}
         max-tokens: ${OLLAMA_MAX_TOKENS:2048}
     embedding:

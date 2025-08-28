@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import jakarta.annotation.PostConstruct;
 
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,13 @@ public class SpringAiRagService {
     @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
     private String ollamaBaseUrl;
     
-    @Value("${spring.ai.ollama.chat.options.model:phi3}")
+    @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
     private String ollamaModel;
+    
+    @PostConstruct
+    public void logConfiguration() {
+        logger.info("Ollama configuration - Base URL: {}, Model: {}", ollamaBaseUrl, ollamaModel);
+    }
     
     public SpringAiRagService(DocumentRepository documentRepository, 
                              DocumentChunkRepository documentChunkRepository) {
