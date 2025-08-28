@@ -10,9 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 public class SpringAiRagService {
@@ -21,13 +22,22 @@ public class SpringAiRagService {
     
     private final DocumentRepository documentRepository;
     private final DocumentChunkRepository documentChunkRepository;
+    private final RestTemplate restTemplate;
     
     @Value("${app.max-retrieval-results:3}")
     private int maxRetrievalResults;
     
-    public SpringAiRagService(DocumentRepository documentRepository, DocumentChunkRepository documentChunkRepository) {
+    @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
+    private String ollamaBaseUrl;
+    
+    @Value("${spring.ai.ollama.chat.options.model:phi3}")
+    private String ollamaModel;
+    
+    public SpringAiRagService(DocumentRepository documentRepository, 
+                            DocumentChunkRepository documentChunkRepository) {
         this.documentRepository = documentRepository;
         this.documentChunkRepository = documentChunkRepository;
+        this.restTemplate = new RestTemplate();
     }
     
     public QueryResponse processQuery(QueryRequest request) {
@@ -63,7 +73,7 @@ public class SpringAiRagService {
                 );
             }
             
-            // Generate response based on the relevant content
+            // Generate AI response based on the relevant content
             String response = generateResponse(request, relevantContent);
             
             return new QueryResponse(
@@ -158,25 +168,59 @@ public class SpringAiRagService {
     }
     
     /**
-     * Generate a response based on the relevant content
+     * Generate an AI response based on the relevant content using Ollama API
      */
     private String generateResponse(QueryRequest request, String relevantContent) {
         try {
-            // For now, return a structured response with the relevant content
-            // In the future, this will integrate with Spring AI for full AI responses
+            logger.info("Generating AI response for query: {}", request.getQuery());
             
-            return String.format(
-                "Based on the textbook content, here's what I found:\n\n" +
-                "**Relevant Information:**\n%s\n\n" +
-                "This is a simplified response showing the most relevant content from your textbook. " +
-                "The full AI integration will be implemented in the next iteration to provide more detailed explanations.",
-                relevantContent.substring(0, Math.min(relevantContent.length(), 1000)) + 
-                (relevantContent.length() > 1000 ? "..." : "")
+            // Create the prompt for textbook-faithful responses
+            String prompt = String.format(
+                "You are a helpful AI assistant that answers questions based on a specific textbook. " +
+                "Use ONLY the information provided in the textbook excerpt below to answer the question. " +
+                "If the textbook excerpt doesn't contain enough information to answer the question, " +
+                "say so clearly. Be accurate and faithful to the textbook content.\n\n" +
+                "Textbook Excerpt:\n%s\n\n" +
+                "Question: %s\n\n" +
+                "Please provide a clear, educational response based on the textbook content:",
+                relevantContent,
+                request.getQuery()
             );
             
+            // Create the request payload for Ollama
+            Map<String, Object> requestPayload = Map.of(
+                "model", ollamaModel,
+                "prompt", prompt,
+                "stream", false,
+                "options", Map.of(
+                    "temperature", 0.7,
+                    "num_predict", 2048
+                )
+            );
+            
+            // Call Ollama API directly
+            String ollamaUrl = ollamaBaseUrl + "/api/generate";
+            logger.info("Calling Ollama at: {}", ollamaUrl);
+            
+            Map<String, Object> response = restTemplate.postForObject(ollamaUrl, requestPayload, Map.class);
+            
+            if (response != null && response.containsKey("response")) {
+                String aiResponse = (String) response.get("response");
+                logger.info("Successfully generated AI response");
+                return aiResponse;
+            } else {
+                logger.error("Unexpected response format from Ollama: {}", response);
+                throw new RuntimeException("Invalid response from Ollama");
+            }
+            
         } catch (Exception e) {
-            logger.error("Error generating response: {}", e.getMessage(), e);
-            return "Sorry, I encountered an error while processing your request. Please try again.";
+            logger.error("Error generating AI response: {}", e.getMessage(), e);
+            return String.format(
+                "I found relevant information in the textbook, but encountered an error while generating an AI response. " +
+                "Here's the relevant content:\n\n%s",
+                relevantContent.substring(0, Math.min(relevantContent.length(), 500)) + 
+                (relevantContent.length() > 500 ? "..." : "")
+            );
         }
     }
 }
