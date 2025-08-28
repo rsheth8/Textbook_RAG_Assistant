@@ -226,16 +226,12 @@ public class SpringAiRagService {
                 request.getQuery()
             );
             
-            // Create the request payload for Ollama API directly
-            Map<String, Object> requestPayload = Map.of(
-                "model", ollamaModel,
-                "prompt", prompt,
-                "stream", false,
-                "options", Map.of(
-                    "temperature", 0.7,
-                    "num_predict", 512
-                )
-            );
+                               // Create the request payload for Ollama API directly
+                   Map<String, Object> requestPayload = Map.of(
+                       "model", ollamaModel,
+                       "prompt", prompt,
+                       "stream", false
+                   );
             
             // Call Ollama API directly
             String ollamaUrl = ollamaBaseUrl + "/api/generate";
