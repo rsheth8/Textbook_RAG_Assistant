@@ -193,6 +193,14 @@ public class SpringAiRagService {
         try {
             logger.info("Generating AI response for query: {}", request.getQuery());
             
+            // Limit the content size to avoid "Error writing request body to server"
+            // Ollama has limits on request body size, so we'll truncate to ~2000 characters
+            String truncatedContent = relevantContent;
+            if (relevantContent.length() > 2000) {
+                truncatedContent = relevantContent.substring(0, 2000) + "...";
+                logger.info("Content truncated from {} to {} characters", relevantContent.length(), truncatedContent.length());
+            }
+            
             // Create the prompt for textbook-faithful responses
             String prompt = String.format(
                 "You are a helpful AI assistant that answers questions based on a specific textbook. " +
@@ -202,7 +210,7 @@ public class SpringAiRagService {
                 "Textbook Excerpt:\n%s\n\n" +
                 "Question: %s\n\n" +
                 "Please provide a clear, educational response based on the textbook content:",
-                relevantContent,
+                truncatedContent,
                 request.getQuery()
             );
             
