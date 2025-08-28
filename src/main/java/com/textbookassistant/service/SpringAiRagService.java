@@ -187,7 +187,7 @@ public class SpringAiRagService {
     }
     
     /**
-     * Generate an AI response based on the relevant content using Ollama API
+     * Generate an AI response based on the relevant content using Open WebUI API
      */
     private String generateResponse(QueryRequest request, String relevantContent) {
         try {
@@ -220,10 +220,12 @@ public class SpringAiRagService {
                 request.getQuery()
             );
             
-            // Create the request payload for Ollama
+            // Create the request payload for Open WebUI API
             Map<String, Object> requestPayload = Map.of(
                 "model", ollamaModel,
-                "prompt", prompt,
+                "messages", List.of(
+                    Map.of("role", "user", "content", prompt)
+                ),
                 "stream", false,
                 "options", Map.of(
                     "temperature", 0.7,
@@ -231,20 +233,34 @@ public class SpringAiRagService {
                 )
             );
             
-            // Call Ollama API directly
-            String ollamaUrl = ollamaBaseUrl + "/api/generate";
-            logger.info("Calling Ollama at: {}", ollamaUrl);
+            // Call Open WebUI API with authentication
+            String openWebUIUrl = ollamaBaseUrl + "/api/v1/chat/completions";
+            logger.info("Calling Open WebUI at: {}", openWebUIUrl);
             
-            Map<String, Object> response = restTemplate.postForObject(ollamaUrl, requestPayload, Map.class);
+            // Add authentication header
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer sk-b79ee681d51744beb8893380d2e5563c");
             
-            if (response != null && response.containsKey("response")) {
-                String aiResponse = (String) response.get("response");
-                logger.info("Successfully generated AI response");
-                return aiResponse;
-            } else {
-                logger.error("Unexpected response format from Ollama: {}", response);
-                throw new RuntimeException("Invalid response from Ollama");
+            org.springframework.http.HttpEntity<Map<String, Object>> entity = 
+                new org.springframework.http.HttpEntity<>(requestPayload, headers);
+            
+            org.springframework.http.ResponseEntity<Map> response = 
+                restTemplate.postForEntity(openWebUIUrl, entity, Map.class);
+            
+            if (response.getBody() != null && response.getBody().containsKey("choices")) {
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
+                if (!choices.isEmpty()) {
+                    Map<String, Object> choice = choices.get(0);
+                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                    String aiResponse = (String) message.get("content");
+                    logger.info("Successfully generated AI response");
+                    return aiResponse;
+                }
             }
+            
+            logger.error("Unexpected response format from Open WebUI: {}", response.getBody());
+            throw new RuntimeException("Invalid response from Open WebUI");
             
         } catch (Exception e) {
             logger.error("Error generating AI response: {}", e.getMessage(), e);
