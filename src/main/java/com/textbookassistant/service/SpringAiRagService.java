@@ -31,6 +31,9 @@ public class SpringAiRagService {
     @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
     private String ollamaBaseUrl;
     
+    @Value("${RAILWAY_SERVICE_OPEN_WEBUI_URL:}")
+    private String openWebUiUrl;
+    
     @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
     private String ollamaModel;
     
@@ -239,16 +242,26 @@ public class SpringAiRagService {
                 request.getQuery()
             );
             
-                                           // Create the request payload for Ollama API directly
+                                           // Create the request payload for Open WebUI API
             Map<String, Object> requestPayload = Map.of(
                 "model", ollamaModel,
-                "prompt", prompt,
+                "messages", List.of(Map.of(
+                    "role", "user",
+                    "content", prompt
+                )),
                 "stream", false
             );
 
-            // Call Ollama API directly
-            String ollamaUrl = ollamaBaseUrl + "/api/generate";
-            logger.info("Calling Ollama directly at: {}", ollamaUrl);
+            // Use Open WebUI if available, otherwise fall back to direct Ollama
+            String apiUrl;
+            if (openWebUiUrl != null && !openWebUiUrl.trim().isEmpty()) {
+                apiUrl = "https://" + openWebUiUrl + "/api/v1/chat/completions";
+                logger.info("Using Open WebUI at: {}", apiUrl);
+            } else {
+                apiUrl = ollamaBaseUrl + "/api/generate";
+                logger.info("Falling back to direct Ollama at: {}", apiUrl);
+            }
+            
             logger.info("Request payload: {}", requestPayload);
             logger.info("Model being used: '{}'", ollamaModel);
             logger.info("Prompt length: {}", prompt.length());
@@ -269,18 +282,36 @@ public class SpringAiRagService {
                 new org.springframework.http.HttpEntity<>(requestPayload, headers);
             
             logger.info("HTTP Headers: {}", headers);
-            logger.info("Full URL: {}", ollamaUrl);
+            logger.info("Full URL: {}", apiUrl);
             
-            logger.info("About to make HTTP request to Ollama...");
+            logger.info("About to make HTTP request...");
             org.springframework.http.ResponseEntity<Map> response = 
-                restTemplate.postForEntity(ollamaUrl, entity, Map.class);
+                restTemplate.postForEntity(apiUrl, entity, Map.class);
             
             logger.info("Received response from Ollama - Status: {}, Headers: {}", 
                 response.getStatusCode(), response.getHeaders());
             logger.info("Response body: {}", response.getBody());
             
-            if (response.getBody() != null && response.getBody().containsKey("response")) {
-                String aiResponse = (String) response.getBody().get("response");
+            if (response.getBody() != null) {
+                String aiResponse;
+                // Handle Open WebUI response format
+                if (response.getBody().containsKey("choices")) {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
+                    if (!choices.isEmpty()) {
+                        Map<String, Object> choice = choices.get(0);
+                        Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                        aiResponse = (String) message.get("content");
+                    } else {
+                        throw new RuntimeException("No choices in Open WebUI response");
+                    }
+                }
+                // Handle direct Ollama response format
+                else if (response.getBody().containsKey("response")) {
+                    aiResponse = (String) response.getBody().get("response");
+                } else {
+                    throw new RuntimeException("Unexpected response format");
+                }
+                
                 logger.info("Successfully generated AI response");
                 return aiResponse;
             }
