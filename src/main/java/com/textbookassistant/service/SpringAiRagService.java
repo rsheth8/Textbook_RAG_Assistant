@@ -31,11 +31,14 @@ public class SpringAiRagService {
     @Value("${spring.ai.ollama.base-url:http://localhost:11434}")
     private String ollamaBaseUrl;
     
-    @Value("${RAILWAY_SERVICE_OPEN_WEBUI_URL:}")
-    private String openWebUiUrl;
-    
-    @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
-    private String ollamaModel;
+               @Value("${RAILWAY_SERVICE_OPEN_WEBUI_URL:}")
+           private String openWebUiUrl;
+
+           @Value("${OPEN_WEBUI_API_KEY:}")
+           private String openWebUiApiKey;
+
+           @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
+           private String ollamaModel;
     
     @PostConstruct
     public void logConfiguration() {
@@ -242,25 +245,25 @@ public class SpringAiRagService {
                 request.getQuery()
             );
             
-                                           // Create the request payload for Open WebUI API
-            Map<String, Object> requestPayload = Map.of(
-                "model", ollamaModel,
-                "messages", List.of(Map.of(
-                    "role", "user",
-                    "content", prompt
-                )),
-                "stream", false
-            );
+                                                                                 // Create the request payload for Open WebUI API
+                   Map<String, Object> requestPayload = Map.of(
+                       "model", ollamaModel,
+                       "messages", List.of(Map.of(
+                           "role", "user",
+                           "content", prompt
+                       )),
+                       "stream", false
+                   );
 
-            // Use Open WebUI if available, otherwise fall back to direct Ollama
-            String apiUrl;
-            if (openWebUiUrl != null && !openWebUiUrl.trim().isEmpty()) {
-                apiUrl = "https://" + openWebUiUrl + "/api/v1/chat/completions";
-                logger.info("Using Open WebUI at: {}", apiUrl);
-            } else {
-                apiUrl = ollamaBaseUrl + "/api/generate";
-                logger.info("Falling back to direct Ollama at: {}", apiUrl);
-            }
+                   // Use Open WebUI if available, otherwise fall back to direct Ollama
+                   String apiUrl;
+                   if (openWebUiUrl != null && !openWebUiUrl.trim().isEmpty()) {
+                       apiUrl = "https://" + openWebUiUrl + "/api/v1/chat/completions";
+                       logger.info("Using Open WebUI at: {}", apiUrl);
+                   } else {
+                       apiUrl = ollamaBaseUrl + "/api/generate";
+                       logger.info("Falling back to direct Ollama at: {}", apiUrl);
+                   }
             
             logger.info("Request payload: {}", requestPayload);
             logger.info("Model being used: '{}'", ollamaModel);
@@ -275,8 +278,15 @@ public class SpringAiRagService {
                 logger.error("Error serializing payload to JSON: {}", e.getMessage());
             }
             
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                               org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                   headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                   
+                   // Add API key if available for Open WebUI
+                   if (openWebUiUrl != null && !openWebUiUrl.trim().isEmpty() && 
+                       openWebUiApiKey != null && !openWebUiApiKey.trim().isEmpty()) {
+                       headers.set("Authorization", "Bearer " + openWebUiApiKey);
+                       logger.info("Added API key to request headers");
+                   }
             
             org.springframework.http.HttpEntity<Map<String, Object>> entity = 
                 new org.springframework.http.HttpEntity<>(requestPayload, headers);
@@ -292,25 +302,25 @@ public class SpringAiRagService {
                 response.getStatusCode(), response.getHeaders());
             logger.info("Response body: {}", response.getBody());
             
-            if (response.getBody() != null) {
-                String aiResponse;
-                // Handle Open WebUI response format
-                if (response.getBody().containsKey("choices")) {
-                    List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
-                    if (!choices.isEmpty()) {
-                        Map<String, Object> choice = choices.get(0);
-                        Map<String, Object> message = (Map<String, Object>) choice.get("message");
-                        aiResponse = (String) message.get("content");
-                    } else {
-                        throw new RuntimeException("No choices in Open WebUI response");
-                    }
-                }
-                // Handle direct Ollama response format
-                else if (response.getBody().containsKey("response")) {
-                    aiResponse = (String) response.getBody().get("response");
-                } else {
-                    throw new RuntimeException("Unexpected response format");
-                }
+                               if (response.getBody() != null) {
+                       String aiResponse;
+                       // Handle Open WebUI response format
+                       if (response.getBody().containsKey("choices")) {
+                           List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
+                           if (!choices.isEmpty()) {
+                               Map<String, Object> choice = choices.get(0);
+                               Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                               aiResponse = (String) message.get("content");
+                           } else {
+                               throw new RuntimeException("No choices in Open WebUI response");
+                           }
+                       }
+                       // Handle direct Ollama response format
+                       else if (response.getBody().containsKey("response")) {
+                           aiResponse = (String) response.getBody().get("response");
+                       } else {
+                           throw new RuntimeException("Unexpected response format");
+                       }
                 
                 logger.info("Successfully generated AI response");
                 return aiResponse;
