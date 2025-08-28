@@ -47,13 +47,7 @@ public class SpringAiRagService {
     }
     
     private RestTemplate createRestTemplateWithTimeouts() {
-        // Create HTTP client with proper timeout configuration
-        org.apache.hc.client5.http.impl.classic.HttpClients.custom()
-            .setConnectionTimeout(java.time.Duration.ofSeconds(30))
-            .setResponseTimeout(java.time.Duration.ofSeconds(60))
-            .build();
-            
-        // For now, use simple RestTemplate with timeout configuration
+        // Use SimpleClientHttpRequestFactory with timeout configuration
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
             new org.springframework.http.client.SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(30000); // 30 seconds
