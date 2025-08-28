@@ -193,24 +193,30 @@ public class SpringAiRagService {
         try {
             logger.info("Generating AI response for query: {}", request.getQuery());
             
-            // Limit the content size to avoid "Error writing request body to server"
-            // Ollama has limits on request body size, so we'll truncate to ~2000 characters
-            String truncatedContent = relevantContent;
-            if (relevantContent.length() > 2000) {
-                truncatedContent = relevantContent.substring(0, 2000) + "...";
-                logger.info("Content truncated from {} to {} characters", relevantContent.length(), truncatedContent.length());
+            // Extract only the most relevant snippet (first 200 characters max)
+            // This prevents sending large chunks of textbook text to the AI
+            String focusedContent = relevantContent;
+            if (relevantContent.length() > 200) {
+                // Find a good breaking point (end of sentence or paragraph)
+                int breakPoint = 200;
+                for (int i = 200; i > 150; i--) {
+                    if (relevantContent.charAt(i) == '.' || relevantContent.charAt(i) == '\n') {
+                        breakPoint = i + 1;
+                        break;
+                    }
+                }
+                focusedContent = relevantContent.substring(0, breakPoint);
+                logger.info("Content focused from {} to {} characters", relevantContent.length(), focusedContent.length());
             }
             
-            // Create the prompt for textbook-faithful responses
+            // Create a focused prompt for textbook-faithful responses
             String prompt = String.format(
-                "You are a helpful AI assistant that answers questions based on a specific textbook. " +
-                "Use ONLY the information provided in the textbook excerpt below to answer the question. " +
-                "If the textbook excerpt doesn't contain enough information to answer the question, " +
-                "say so clearly. Be accurate and faithful to the textbook content.\n\n" +
-                "Textbook Excerpt:\n%s\n\n" +
+                "Based on this brief excerpt from a linear algebra textbook, answer the question. " +
+                "If the excerpt doesn't contain enough information, say so clearly.\n\n" +
+                "Excerpt: %s\n\n" +
                 "Question: %s\n\n" +
-                "Please provide a clear, educational response based on the textbook content:",
-                truncatedContent,
+                "Answer:",
+                focusedContent,
                 request.getQuery()
             );
             
@@ -221,7 +227,7 @@ public class SpringAiRagService {
                 "stream", false,
                 "options", Map.of(
                     "temperature", 0.7,
-                    "num_predict", 2048
+                    "num_predict", 512
                 )
             );
             
@@ -244,9 +250,9 @@ public class SpringAiRagService {
             logger.error("Error generating AI response: {}", e.getMessage(), e);
             return String.format(
                 "I found relevant information in the textbook, but encountered an error while generating an AI response. " +
-                "Here's the relevant content:\n\n%s",
-                relevantContent.substring(0, Math.min(relevantContent.length(), 500)) + 
-                (relevantContent.length() > 500 ? "..." : "")
+                "Here's a brief excerpt:\n\n%s",
+                relevantContent.substring(0, Math.min(relevantContent.length(), 150)) + 
+                (relevantContent.length() > 150 ? "..." : "")
             );
         }
     }
