@@ -3,7 +3,7 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "java -Xmx2g -jar target/textbook-rag-assistant-1.0.0.jar"
-healthcheckPath = "/actuator/health"
+healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3

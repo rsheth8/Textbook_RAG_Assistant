@@ -78,27 +78,3 @@ logging:
 server:
   port: ${PORT:8080}
 
-# Configure Actuator with Spring Security
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: when_authorized
-  metrics:
-    export:
-      simple:
-        enabled: false
-    enable:
-      system: false
-      processor: false
-      process: false
-      jvm: true
-      uptime: true
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
-      - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
-
