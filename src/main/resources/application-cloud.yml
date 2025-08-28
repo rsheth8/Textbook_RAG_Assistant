@@ -78,31 +78,21 @@ logging:
 server:
   port: ${PORT:8080}
 
-# Actuator - Disable problematic metrics
+# Completely disable Actuator for cloud deployment to avoid metrics issues
 management:
   endpoints:
-    web:
-      exposure:
-        include: health
+    enabled-by-default: false
   endpoint:
     health:
-      show-details: never
-  metrics:
-    export:
-      simple:
-        enabled: false
-    enable:
-      jvm: false
-      process: false
-      system: false
-      processor: false
-      uptime: false
+      enabled: false
   autoconfigure:
     exclude:
+      - org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.ProcessMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration
       - io.micrometer.core.instrument.binder.system.ProcessorMetrics
       - io.micrometer.core.instrument.binder.system.UptimeMetrics
       - io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
