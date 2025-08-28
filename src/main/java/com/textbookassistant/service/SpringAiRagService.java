@@ -229,17 +229,28 @@ public class SpringAiRagService {
                 request.getQuery()
             );
             
-                               // Create the request payload for Ollama API directly
-                   Map<String, Object> requestPayload = Map.of(
-                       "model", ollamaModel,
-                       "prompt", prompt,
-                       "stream", false
-                   );
+                                           // Create the request payload for Ollama API directly
+            Map<String, Object> requestPayload = Map.of(
+                "model", ollamaModel,
+                "prompt", prompt,
+                "stream", false
+            );
+
+            // Call Ollama API directly
+            String ollamaUrl = ollamaBaseUrl + "/api/generate";
+            logger.info("Calling Ollama directly at: {}", ollamaUrl);
+            logger.info("Request payload: {}", requestPayload);
+            logger.info("Model being used: '{}'", ollamaModel);
+            logger.info("Prompt length: {}", prompt.length());
             
-                               // Call Ollama API directly
-                   String ollamaUrl = ollamaBaseUrl + "/api/generate";
-                   logger.info("Calling Ollama directly at: {}", ollamaUrl);
-                   logger.info("Request payload: {}", requestPayload);
+            // Log the exact JSON that would be sent
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                String jsonPayload = mapper.writeValueAsString(requestPayload);
+                logger.info("JSON payload being sent: {}", jsonPayload);
+            } catch (Exception e) {
+                logger.error("Error serializing payload to JSON: {}", e.getMessage());
+            }
             
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
@@ -247,8 +258,16 @@ public class SpringAiRagService {
             org.springframework.http.HttpEntity<Map<String, Object>> entity = 
                 new org.springframework.http.HttpEntity<>(requestPayload, headers);
             
+            logger.info("HTTP Headers: {}", headers);
+            logger.info("Full URL: {}", ollamaUrl);
+            
+            logger.info("About to make HTTP request to Ollama...");
             org.springframework.http.ResponseEntity<Map> response = 
                 restTemplate.postForEntity(ollamaUrl, entity, Map.class);
+            
+            logger.info("Received response from Ollama - Status: {}, Headers: {}", 
+                response.getStatusCode(), response.getHeaders());
+            logger.info("Response body: {}", response.getBody());
             
             if (response.getBody() != null && response.getBody().containsKey("response")) {
                 String aiResponse = (String) response.getBody().get("response");
