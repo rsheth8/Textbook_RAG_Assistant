@@ -45,7 +45,7 @@ spring.ai:
     embedding:
       options:
         model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text}
-  
+  # Disable vector store since Railway PostgreSQL doesn't have pgvector extension
   vectorstore:
     pgvector:
       dimensions: 768
