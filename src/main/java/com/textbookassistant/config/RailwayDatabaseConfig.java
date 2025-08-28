@@ -2,11 +2,12 @@ package com.textbookassistant.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 
 import javax.sql.DataSource;
 import com.zaxxer.hikari.HikariDataSource;
@@ -20,23 +21,8 @@ public class RailwayDatabaseConfig {
     
     private static final Logger logger = LoggerFactory.getLogger(RailwayDatabaseConfig.class);
     
-    @Value("${DATABASE_URL:}")
-    private String databaseUrl;
-    
-    @Value("${PGUSER:}")
-    private String pgUser;
-    
-    @Value("${PGPASSWORD:}")
-    private String pgPassword;
-    
-    @Value("${PGHOST:}")
-    private String pgHost;
-    
-    @Value("${PGPORT:5432}")
-    private String pgPort;
-    
-    @Value("${PGDATABASE:}")
-    private String pgDatabase;
+    @Autowired
+    private Environment environment;
     
     @Bean
     @Primary
@@ -49,6 +35,18 @@ public class RailwayDatabaseConfig {
             String jdbcUrl;
             String username;
             String password;
+            
+            // Read environment variables directly
+            String databaseUrl = environment.getProperty("DATABASE_URL");
+            String pgUser = environment.getProperty("PGUSER");
+            String pgPassword = environment.getProperty("PGPASSWORD");
+            String pgHost = environment.getProperty("PGHOST");
+            String pgPort = environment.getProperty("PGPORT", "5432");
+            String pgDatabase = environment.getProperty("PGDATABASE");
+            
+            logger.info("DATABASE_URL: {}", databaseUrl);
+            logger.info("PGHOST: {}", pgHost);
+            logger.info("PGUSER: {}", pgUser);
             
             // Check if variables are resolved or still in Railway substitution format
             boolean hasUnresolvedVariables = (databaseUrl != null && databaseUrl.contains("${{")) ||
@@ -116,7 +114,7 @@ public class RailwayDatabaseConfig {
             logger.info("Railway database configuration completed successfully");
             
         } catch (URISyntaxException e) {
-            logger.error("Failed to parse DATABASE_URL: {}", databaseUrl, e);
+            logger.error("Failed to parse DATABASE_URL: {}", environment.getProperty("DATABASE_URL"), e);
             throw new RuntimeException("Invalid DATABASE_URL format: " + e.getMessage());
         } catch (Exception e) {
             logger.error("Failed to configure Railway database: {}", e.getMessage());
