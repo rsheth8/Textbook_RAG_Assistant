@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  open-webui-ollama:
+    image: ghcr.io/open-webui/open-webui:ollama
+    ports:
+      - "8080:8080"
+    volumes:
+      - ollama_data:/root/.ollama
+      - openwebui_data:/app/backend/data
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  openwebui_data:

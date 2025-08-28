@@ -40,10 +40,14 @@ public class SpringAiRagService {
            @Value("${spring.ai.ollama.chat.options.model:qwen2.5:0.5b}")
            private String ollamaModel;
     
-    @PostConstruct
-    public void logConfiguration() {
-        logger.info("Ollama configuration - Base URL: {}, Model: {}", ollamaBaseUrl, ollamaModel);
-    }
+               @PostConstruct
+           public void logConfiguration() {
+               logger.info("Ollama configuration - Base URL: {}, Model: {}", ollamaBaseUrl, ollamaModel);
+               logger.info("Open WebUI configuration - URL: {}, API Key: {}", 
+                   openWebUiUrl, 
+                   openWebUiApiKey != null ? openWebUiApiKey.substring(0, Math.min(10, openWebUiApiKey.length())) + "..." : "null");
+               logger.info("Application restarted with new configuration");
+           }
     
     public SpringAiRagService(DocumentRepository documentRepository, 
                              DocumentChunkRepository documentChunkRepository) {
@@ -274,7 +278,7 @@ public class SpringAiRagService {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 String jsonPayload = mapper.writeValueAsString(requestPayload);
                 logger.info("JSON payload being sent: {}", jsonPayload);
-            } catch (Exception e) {
+        } catch (Exception e) {
                 logger.error("Error serializing payload to JSON: {}", e.getMessage());
             }
             

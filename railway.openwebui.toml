@@ -1,0 +1,12 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.openwebui"
+
+[deploy]
+startCommand = "ollama serve & sleep 5 && open-webui serve"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[[services]]
+name = "open-webui-ollama"
