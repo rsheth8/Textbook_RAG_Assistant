@@ -94,4 +94,7 @@ management:
   autoconfigure:
     exclude:
       - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
+      - io.micrometer.core.instrument.binder.system.ProcessorMetrics
+      - io.micrometer.core.instrument.binder.system.UptimeMetrics
 
