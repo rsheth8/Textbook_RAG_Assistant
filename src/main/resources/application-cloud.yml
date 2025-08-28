@@ -78,7 +78,7 @@ logging:
 server:
   port: ${PORT:8080}
 
-# Keep Actuator but disable problematic system metrics
+# Configure Actuator with Spring Security
 management:
   endpoints:
     web:
@@ -86,7 +86,7 @@ management:
         include: health,info
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: when_authorized
   metrics:
     export:
       simple:
