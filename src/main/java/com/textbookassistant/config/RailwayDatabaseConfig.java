@@ -23,20 +23,20 @@ public class RailwayDatabaseConfig {
     @Value("${DATABASE_URL:}")
     private String databaseUrl;
     
-    @Value("${POSTGRES_USER:}")
-    private String postgresUser;
+    @Value("${PGUSER:}")
+    private String pgUser;
     
-    @Value("${POSTGRES_PASSWORD:}")
-    private String postgresPassword;
+    @Value("${PGPASSWORD:}")
+    private String pgPassword;
     
-    @Value("${POSTGRES_HOST:}")
-    private String postgresHost;
+    @Value("${PGHOST:}")
+    private String pgHost;
     
-    @Value("${POSTGRES_PORT:5432}")
-    private String postgresPort;
+    @Value("${PGPORT:5432}")
+    private String pgPort;
     
-    @Value("${POSTGRES_DB:}")
-    private String postgresDb;
+    @Value("${PGDATABASE:}")
+    private String pgDatabase;
     
     @Bean
     @Primary
@@ -65,25 +65,25 @@ public class RailwayDatabaseConfig {
                 // DATABASE_URL is not resolved, use individual variables
                 logger.info("DATABASE_URL not resolved, using individual PostgreSQL variables");
                 
-                if (postgresHost == null || postgresHost.isEmpty()) {
-                    throw new RuntimeException("POSTGRES_HOST is not set");
+                if (pgHost == null || pgHost.isEmpty()) {
+                    throw new RuntimeException("PGHOST is not set");
                 }
-                if (postgresUser == null || postgresUser.isEmpty()) {
-                    throw new RuntimeException("POSTGRES_USER is not set");
+                if (pgUser == null || pgUser.isEmpty()) {
+                    throw new RuntimeException("PGUSER is not set");
                 }
-                if (postgresPassword == null || postgresPassword.isEmpty()) {
-                    throw new RuntimeException("POSTGRES_PASSWORD is not set");
+                if (pgPassword == null || pgPassword.isEmpty()) {
+                    throw new RuntimeException("PGPASSWORD is not set");
                 }
-                if (postgresDb == null || postgresDb.isEmpty()) {
-                    postgresDb = "railway"; // Default Railway database name
+                if (pgDatabase == null || pgDatabase.isEmpty()) {
+                    pgDatabase = "railway"; // Default Railway database name
                 }
                 
-                jdbcUrl = "jdbc:postgresql://" + postgresHost + ":" + postgresPort + "/" + postgresDb;
-                username = postgresUser;
-                password = postgresPassword;
+                jdbcUrl = "jdbc:postgresql://" + pgHost + ":" + pgPort + "/" + pgDatabase;
+                username = pgUser;
+                password = pgPassword;
                 
                 logger.info("Using individual PostgreSQL variables - Host: {}, Database: {}", 
-                    postgresHost, postgresDb);
+                    pgHost, pgDatabase);
             }
             
             dataSource.setJdbcUrl(jdbcUrl);
