@@ -91,10 +91,21 @@ management:
     export:
       simple:
         enabled: false
+    enable:
+      jvm: false
+      process: false
+      system: false
+      processor: false
+      uptime: false
   autoconfigure:
     exclude:
       - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.ProcessMetricsAutoConfiguration
       - io.micrometer.core.instrument.binder.system.ProcessorMetrics
       - io.micrometer.core.instrument.binder.system.UptimeMetrics
+      - io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+      - io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+      - io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 
