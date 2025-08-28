@@ -43,7 +43,23 @@ public class SpringAiRagService {
                              DocumentChunkRepository documentChunkRepository) {
         this.documentRepository = documentRepository;
         this.documentChunkRepository = documentChunkRepository;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = createRestTemplateWithTimeouts();
+    }
+    
+    private RestTemplate createRestTemplateWithTimeouts() {
+        // Create HTTP client with proper timeout configuration
+        org.apache.hc.client5.http.impl.classic.HttpClients.custom()
+            .setConnectionTimeout(java.time.Duration.ofSeconds(30))
+            .setResponseTimeout(java.time.Duration.ofSeconds(60))
+            .build();
+            
+        // For now, use simple RestTemplate with timeout configuration
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
+            new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(30000); // 30 seconds
+        factory.setReadTimeout(60000);    // 60 seconds
+        
+        return new RestTemplate(factory);
     }
     
     public QueryResponse processQuery(QueryRequest request) {
