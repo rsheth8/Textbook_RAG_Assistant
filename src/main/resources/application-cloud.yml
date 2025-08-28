@@ -87,6 +87,7 @@ management:
       enabled: false
   autoconfigure:
     exclude:
+      - org.springframework.boot.actuate.autoconfigure.ActuatorAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
