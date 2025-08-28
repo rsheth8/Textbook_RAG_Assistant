@@ -44,9 +44,28 @@ public class SpringAiRagService {
         try {
             logger.info("Processing query: {}", request.getQuery());
             
-            // Get the document
-            Document document = documentRepository.findById(request.getDocumentId())
-                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+            // Handle global search (documentId = 0) by finding the first available document
+            Document document;
+            if (request.getDocumentId() == null || request.getDocumentId() == 0) {
+                logger.info("Global search requested - finding first available document");
+                List<Document> documents = documentRepository.findAll();
+                if (documents.isEmpty()) {
+                    return new QueryResponse(
+                        "No documents are available for searching.",
+                        List.of(),
+                        request.getLearningLevel(),
+                        request.getResponseType(),
+                        request.getQuery(),
+                        null
+                    );
+                }
+                document = documents.get(0);
+                logger.info("Using document: {} (ID: {})", document.getFilename(), document.getId());
+            } else {
+                // Get the specific document
+                document = documentRepository.findById(request.getDocumentId())
+                    .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+            }
             
             if (document.getExtractedText() == null || document.getExtractedText().trim().isEmpty()) {
                 return new QueryResponse(
@@ -55,7 +74,7 @@ public class SpringAiRagService {
                     request.getLearningLevel(),
                     request.getResponseType(),
                     request.getQuery(),
-                    request.getDocumentId()
+                    document.getId()
                 );
             }
             
@@ -69,7 +88,7 @@ public class SpringAiRagService {
                     request.getLearningLevel(),
                     request.getResponseType(),
                     request.getQuery(),
-                    request.getDocumentId()
+                    document.getId()
                 );
             }
             
@@ -82,7 +101,7 @@ public class SpringAiRagService {
                 request.getLearningLevel(),
                 request.getResponseType(),
                 request.getQuery(),
-                request.getDocumentId()
+                document.getId()
             );
             
         } catch (Exception e) {
