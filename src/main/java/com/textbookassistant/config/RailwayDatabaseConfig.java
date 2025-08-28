@@ -50,8 +50,21 @@ public class RailwayDatabaseConfig {
             String username;
             String password;
             
-            // Try to parse DATABASE_URL first
-            if (databaseUrl != null && !databaseUrl.isEmpty() && !databaseUrl.contains("${{")) {
+            // Check if variables are resolved or still in Railway substitution format
+            boolean hasUnresolvedVariables = (databaseUrl != null && databaseUrl.contains("${{")) ||
+                                           (pgHost != null && pgHost.contains("${{")) ||
+                                           (pgUser != null && pgUser.contains("${{"));
+            
+            if (hasUnresolvedVariables) {
+                logger.error("Railway variable substitution is not working properly.");
+                logger.error("DATABASE_URL: {}", databaseUrl);
+                logger.error("PGHOST: {}", pgHost);
+                logger.error("PGUSER: {}", pgUser);
+                throw new RuntimeException("Railway environment variables are not being resolved. Variables still contain ${{}} format. This usually means the PostgreSQL service is not properly connected or Railway's variable substitution is not working.");
+            }
+            
+            // Try to parse DATABASE_URL first (preferred method)
+            if (databaseUrl != null && !databaseUrl.isEmpty()) {
                 // DATABASE_URL is properly resolved
                 URI dbUri = new URI(databaseUrl);
                 username = dbUri.getUserInfo().split(":")[0];
@@ -61,16 +74,10 @@ public class RailwayDatabaseConfig {
                 logger.info("Using DATABASE_URL configuration - Host: {}, Database: {}", 
                     dbUri.getHost(), dbUri.getPath());
                 
-            } else {
-                // DATABASE_URL is not resolved, use individual variables
-                logger.info("DATABASE_URL not resolved, using individual PostgreSQL variables");
+            } else if (pgHost != null && !pgHost.isEmpty() && pgUser != null && !pgUser.isEmpty()) {
+                // Individual PostgreSQL variables are available
+                logger.info("Using individual PostgreSQL variables");
                 
-                if (pgHost == null || pgHost.isEmpty()) {
-                    throw new RuntimeException("PGHOST is not set");
-                }
-                if (pgUser == null || pgUser.isEmpty()) {
-                    throw new RuntimeException("PGUSER is not set");
-                }
                 if (pgPassword == null || pgPassword.isEmpty()) {
                     throw new RuntimeException("PGPASSWORD is not set");
                 }
@@ -84,6 +91,13 @@ public class RailwayDatabaseConfig {
                 
                 logger.info("Using individual PostgreSQL variables - Host: {}, Database: {}", 
                     pgHost, pgDatabase);
+                    
+            } else {
+                // Neither DATABASE_URL nor individual variables are available
+                logger.error("DATABASE_URL: {}", databaseUrl);
+                logger.error("PGHOST: {}", pgHost);
+                logger.error("PGUSER: {}", pgUser);
+                throw new RuntimeException("Neither DATABASE_URL nor individual PostgreSQL variables (PGHOST, PGUSER) are properly configured. Please ensure the PostgreSQL service is connected to your main application service.");
             }
             
             dataSource.setJdbcUrl(jdbcUrl);
