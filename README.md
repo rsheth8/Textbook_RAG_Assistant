@@ -1,283 +1,154 @@
-# 📚 Textbook Assistant - RAG-Powered Learning System (MVP)
+# Textbook RAG Assistant
 
-A simplified Retrieval-Augmented Generation (RAG) application that provides AI-powered tutoring based on your specific textbook content. This MVP version focuses on core functionality with Spring AI and PostgreSQL.
+A Spring Boot application that lets you upload a textbook PDF and ask questions about it, answered by an LLM using only the textbook's own text.
 
-## 🌟 **Live Demo**
+## What this is
 
-**Live Application**: https://textbookragassistant-production.up.railway.app
+Imagine you're studying from a specific textbook — say, a linear algebra textbook — and you want to ask it questions the way you'd ask a tutor, but get answers that stick to exactly what that book says, in the terminology and style your professor uses. That's what this project does.
 
-**GitHub Repository**: https://github.com/rsheth8/Textbook_RAG_Assistant
+You upload a PDF of the textbook. The app extracts the text and stores it. When you ask a question, it searches the stored textbook text for the passage that best matches your question, hands that passage to a language model along with your question, and asks the model to answer using only that excerpt. The result is a chat-style Q&A tool that stays "textbook-faithful" instead of answering from the model's general knowledge.
 
-## 🎯 **Key Features (MVP)**
+It ships as a web app (a simple chat UI built with Thymeleaf templates) and is set up to run either locally with a self-hosted LLM (via Ollama) or deployed to Railway.
 
-- **📖 Textbook-Faithful AI**: Teaches EXACTLY as your textbook teaches
-- **🌐 Global Textbook Search**: Access to entire textbook content simultaneously
-- **📚 Chapter Organization**: Organized by actual textbook chapters
-- **🎨 Modern UI**: Beautiful gradient interface with responsive design
-- **⚡ Real-time Processing**: Instant answers with comprehensive context
-- **☁️ Cloud Deployed**: Available online via Railway
-- **🔧 Spring AI Integration**: Uses Spring AI for future AI capabilities
+## Key features
 
-## 🏗️ **Project Structure**
+- **PDF upload and text extraction** — upload a textbook PDF; text is extracted with Apache PDFBox and stored in PostgreSQL.
+- **Global or per-document search** — query across a single uploaded document, or search whatever textbook is loaded by default.
+- **Textbook-faithful answers** — the LLM prompt explicitly instructs the model to answer only from the retrieved excerpt, and to say so if the excerpt doesn't contain enough information.
+- **Configurable learning level and response style** — requests carry a `learningLevel` (beginner/intermediate/advanced) and `responseType` (explanation/summary/step-by-step), which are passed through the API (the current implementation does not yet vary the prompt by these fields — see Implementation Notes).
+- **Pluggable LLM backend** — talks to a local Ollama server by default, or to an Open WebUI-compatible endpoint if configured (used for the Railway deployment).
+- **Chapter mapping data** — a static `chapter_mapping.json` resource for organizing content by chapter in the UI.
+- **Preloaded default textbook** — on cloud deployments (`SPRING_PROFILES_ACTIVE=cloud`), the app auto-loads a bundled "Applied Linear Algebra" text so there's content to query without uploading anything first.
+
+## How it works
+
+At a high level this is a **retrieval step + a generation step**, but it's worth being precise about what "retrieval" means here today: it is a **keyword/paragraph scoring search over the stored plain text**, not a vector/embedding similarity search — see the note at the end of this section.
+
+```mermaid
+flowchart TD
+    A[User uploads textbook PDF] --> B[PdfProcessingService<br/>extracts text with Apache PDFBox]
+    B --> C[(PostgreSQL<br/>documents table<br/>stores full extracted text)]
+    D[User submits a question<br/>+ documentId + learningLevel + responseType] --> E[RagController<br/>/api/v1/query]
+    E --> F[SpringAiRagService.processQuery]
+    C --> F
+    F --> G[findRelevantContent:<br/>split text into paragraphs,<br/>score each paragraph by<br/>query word / phrase matches]
+    G --> H[Best-scoring paragraph<br/>+/- 200 chars of surrounding context]
+    H --> I[Trim to ~200 chars<br/>at a sentence/paragraph boundary]
+    I --> J[Build prompt:<br/>excerpt + question]
+    J --> K{LLM backend}
+    K -->|configured| L[Open WebUI API<br/>/api/v1/chat/completions]
+    K -->|fallback| M[Direct Ollama API<br/>/api/generate]
+    L --> N[Answer text]
+    M --> N
+    N --> O[QueryResponse returned to UI:<br/>answer + source excerpt]
+```
+
+Step by step:
+
+1. **Ingestion** — `PdfProcessingService` saves the uploaded PDF to disk and uses Apache PDFBox (`PDFTextStripper`) to extract its full text.
+2. **Storage** — the extracted text is saved as a single `TEXT` column on a `Document` row in PostgreSQL (`document_repository` / `documents` table). There is also a `DocumentChunk` entity and `document_chunks` table defined in the schema, intended for storing pre-split chunks, but the active query path (`SpringAiRagService`) reads directly from `Document.extractedText` rather than from `DocumentChunk` rows.
+3. **Retrieval** — when a question comes in, `findRelevantContent()` splits the document's text into paragraphs (on blank lines), scores each paragraph by counting matching query words, bonus points for matching two-word phrases, and a bigger bonus if the paragraph contains the whole query verbatim. The highest-scoring paragraph is selected and expanded with ~200 characters of surrounding text for context.
+4. **Prompt construction** — the retrieved excerpt is trimmed to roughly 200 characters (cut at a sentence or paragraph boundary where possible) and inserted into a fixed prompt template: *"Based on this brief excerpt from a linear algebra textbook, answer the question. If the excerpt doesn't contain enough information, say so clearly. Excerpt: ... Question: ... Answer:"*.
+5. **Generation** — the prompt is sent as a chat completion request. If an Open WebUI URL/API key is configured (`RAILWAY_SERVICE_OPEN_WEBUI_URL`, `OPEN_WEBUI_API_KEY`), it's sent to Open WebUI's `/api/v1/chat/completions` endpoint; otherwise it falls back to a direct call to Ollama's `/api/generate` endpoint. The model name comes from `spring.ai.ollama.chat.options.model` (default `qwen2.5:0.5b` in `application.yml`, `gemma2` in `env.example`).
+6. **Response** — the model's answer, plus the retrieved excerpt as the cited source, is returned to the caller as a `QueryResponse` and rendered in the chat UI.
+
+**Note on "RAG" and vector search**: the project depends on Spring AI's Ollama and pgvector starters (`pom.xml`) and configures a 768-dimension pgvector store (`application.yml`), and the README's prior version described this as an in-progress capability. As of this codebase, however, the actual retrieval logic in `SpringAiRagService` is plain keyword/paragraph scoring over raw text, not embedding-based similarity search — no embedding calls or vector-store lookups occur in the query path. The `DocumentChunk` entity/table and the pgvector dependencies appear to be scaffolding for a planned embeddings-based retrieval upgrade rather than code currently in use.
+
+## Tech stack
+
+- **Language / runtime**: Java 17
+- **Framework**: Spring Boot 3.2 (Spring Web, Spring Data JPA, Spring Security, Thymeleaf, Bean Validation)
+- **AI integration**: Spring AI (`spring-ai-ollama-spring-boot-starter`, `spring-ai-pgvector-store-spring-boot-starter`, version `1.0.0-M6`) — dependencies present, but current querying is done via direct HTTP calls (`RestTemplate`) to Ollama/Open WebUI rather than through Spring AI's abstractions
+- **LLM serving**: Ollama (local), or an Open WebUI-compatible chat completions endpoint (e.g. on Railway)
+- **Database**: PostgreSQL (with the `pgvector` extension available for future vector search)
+- **PDF parsing**: Apache PDFBox 2.0.29
+- **Build tool**: Maven (with Maven Wrapper)
+- **Containerization / deployment**: Docker, Docker Compose, and Railway (`railway.json`/`railway.toml`, `nixpacks.toml`, `Procfile`)
+
+## Project structure
 
 ```
-TextbookAssistant/
-├── 📁 src/                    # Spring Boot application source
-│   ├── main/java/            # Java source code
-│   ├── main/resources/       # Configuration and templates
-│   └── test/                 # Unit tests
-├── 📁 docs/                  # Documentation
-├── 📁 scripts/               # Utility scripts
-├── 📁 data/                  # Data storage
-├── 📁 target/               # Compiled application
-├── 📄 pom.xml               # Maven dependencies
-├── 📄 docker-compose.yml    # Docker services
-├── 📄 Dockerfile            # Application container
-├── 📄 railway.json          # Railway deployment config
-├── 📄 railway.toml          # Railway deployment config
-├── 📄 nixpacks.toml         # Railway build config
-├── 📄 Procfile              # Railway startup config
-└── 📄 env.example           # Environment variables template
+Textbook_RAG_Assistant/
+├── src/main/java/com/textbookassistant/
+│   ├── TextbookRagAssistantApplication.java   # Spring Boot entry point
+│   ├── config/                                # DB, security, and startup data-loading config
+│   ├── controller/                            # REST + web controllers (RagController, WebController, HealthController)
+│   ├── dto/                                   # Request/response payloads (QueryRequest, QueryResponse, UploadResponse)
+│   ├── model/                                 # JPA entities (Document, DocumentChunk)
+│   ├── repository/                            # Spring Data JPA repositories
+│   └── service/                               # PdfProcessingService (ingestion), SpringAiRagService (retrieval + generation)
+├── src/main/resources/
+│   ├── application.yml / application-docker.yml / application-cloud.yml   # Profile-specific config
+│   ├── schema.sql                             # Database schema
+│   ├── textbook_content.txt                   # Bundled default textbook text (loaded on cloud profile)
+│   ├── static/chapter_mapping.json             # Chapter metadata for the UI
+│   └── templates/                             # Thymeleaf templates (chat.html, index.html)
+├── data/uploads/, data/processed/             # Local storage for uploaded PDFs
+├── scripts/                                   # Setup/deployment helper scripts (DB setup, Ollama setup, textbook extraction)
+├── docs/                                      # Deployment guides and design notes
+├── Dockerfile, Dockerfile.openwebui           # Container build definitions
+├── docker-compose.yml, docker-compose.openwebui.yml
+├── railway.json, railway.toml, nixpacks.toml, Procfile   # Railway deployment configuration
+├── env.example                                # Template for local environment variables
+└── pom.xml                                    # Maven build and dependencies
 ```
 
-## 🚀 **Quick Start**
+## Setup / running locally
 
-### **Prerequisites**
-- Java 17 or higher
-- Maven 3.6+
-- Docker and Docker Compose
-- PostgreSQL
+### Prerequisites
 
-### **1. Local Setup**
+- Java 17+
+- Maven 3.6+ (or use the included `./mvnw` wrapper)
+- Docker and Docker Compose (for PostgreSQL)
+- [Ollama](https://ollama.com) running locally, with the chat and embedding models pulled (e.g. `ollama pull gemma2`, `ollama pull nomic-embed-text`)
+
+### Steps
+
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/rsheth8/Textbook_RAG_Assistant.git
 cd Textbook_RAG_Assistant
 
-# Copy environment template
+# 2. Copy the environment template and adjust values as needed
 cp env.example .env
 
-# Start PostgreSQL database
+# 3. Start PostgreSQL
 docker-compose up -d postgres
+
+# 4. Build and run the application
+./mvnw clean package
+./mvnw spring-boot:run
 ```
 
-### **2. Build and Run**
+The app listens on **http://localhost:8080** by default (chat UI at `/`, health check at `/health`).
+
+### Environment variables (from `env.example` / `application.yml`)
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `DATABASE_URL` / `SPRING_DATASOURCE_URL` (via `application.yml`) | PostgreSQL connection | `jdbc:postgresql://localhost:5432/textbook_assistant` |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | DB credentials for Docker Compose | `postgres` / `password` / `textbook_assistant` |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
+| `OLLAMA_MODEL` | Chat model name | `qwen2.5:0.5b` (`application.yml`) / `gemma2` (`env.example`) |
+| `OLLAMA_EMBEDDING_MODEL` | Embedding model name (for future vector search) | `nomic-embed-text` |
+| `OLLAMA_TEMPERATURE`, `OLLAMA_MAX_TOKENS` | Chat generation parameters | `0.7`, `2048` |
+| `CHUNK_SIZE`, `CHUNK_OVERLAP` | Configured but not currently used by the active keyword-search retrieval path | `300`/`50` (`application.yml`), `500`/`100` (`env.example`) |
+| `MAX_RETRIEVAL_RESULTS` | Configured retrieval result count | `3` |
+| `UPLOAD_DIR`, `PROCESSED_DIR` | Local storage paths for uploaded/processed files | `data/uploads`, `data/processed` |
+| `RAILWAY_SERVICE_OPEN_WEBUI_URL`, `OPEN_WEBUI_API_KEY` | Optional Open WebUI endpoint/key used instead of calling Ollama directly | unset (falls back to direct Ollama) |
+| `SPRING_PROFILES_ACTIVE` | `local`, `docker`, or `cloud` — controls which `application-*.yml` is active and whether the default textbook auto-loads | `local` |
+
+### Tests
+
 ```bash
-# Build the application
-mvn clean package
-
-# Run with increased memory
-MAVEN_OPTS="-Xmx8g -Xms4g" mvn spring-boot:run
+./mvnw test
 ```
 
-### **3. Access the Application**
-- **Web Interface**: http://localhost:8080
-- **Health Check**: http://localhost:8080/health
+## Notable implementation details / design decisions
 
-## ☁️ **Cloud Deployment (Railway)**
-
-### **Deployment Status**
-✅ **Successfully Deployed**: https://textbookragassistant-production.up.railway.app
-
-### **Environment Variables**
-The following environment variables are configured in Railway:
-
-#### **Database Configuration**
-```
-DATABASE_URL=postgresql://postgres:***@maglev.proxy.rlwy.net:55026/railway
-POSTGRES_USER=postgres
-POSTGRES_DB=railway
-```
-
-#### **Application Configuration**
-```
-SPRING_PROFILES_ACTIVE=cloud
-CHUNK_SIZE=300
-CHUNK_OVERLAP=50
-MAX_RETRIEVAL_RESULTS=3
-UPLOAD_DIR=/tmp/uploads
-PROCESSED_DIR=/tmp/processed
-```
-
-### **Deployment Features**
-- ✅ **Automatic Health Checks**: `/health` endpoint
-- ✅ **PostgreSQL Database**: Dedicated PostgreSQL database for production reliability
-- ✅ **Enhanced Logging**: Detailed connection and error reporting
-- ✅ **Memory Optimization**: 2GB heap size for large documents
-- ✅ **Connection Pooling**: Optimized for cloud environment
-
-## 📖 **Usage Guide**
-
-### **Uploading Your Textbook**
-1. **Single PDF**: Upload directly through the web interface
-2. **Large PDFs**: Use the smart splitting script:
-   ```bash
-   ./scripts/tools/smart_pdf_splitter.sh "/path/to/your/textbook.pdf"
-   ```
-
-### **Asking Questions**
-- **🌐 Global Search**: Search across entire textbook
-- **📚 Chapter Search**: Focus on specific chapters
-- **🎓 Learning Levels**: Beginner, Intermediate, Advanced
-- **📝 Response Types**: Concise, Detailed, Step-by-step
-
-### **System Features**
-- **Textbook-Faithful Responses**: AI uses ONLY your textbook content
-- **Consistent Teaching Style**: Matches your professor's approach
-- **Mathematical Notation**: Uses exact same symbols and conventions
-- **Example Alignment**: Uses textbook examples and explanations
-
-## 🔧 **Configuration**
-
-### **Application Settings** (`application.yml`)
-```yaml
-app:
-  chunk:
-    size: 500          # Text chunk size
-    overlap: 100       # Chunk overlap
-  max-retrieval-results: 5
-
-spring.ai:
-  ollama:
-    base-url: http://localhost:11434
-    chat:
-      options:
-        model: gemma2
-        temperature: 0.7
-        max-tokens: 2048
-    embedding:
-      options:
-        model: nomic-embed-text
-```
-
-### **Database Configuration**
-- **Local**: PostgreSQL via Docker Compose
-- **Cloud**: Railway PostgreSQL database
-- **Vector Storage**: Ready for future pgvector integration
-
-## 🛠️ **Development**
-
-### **Key Components**
-- **SpringAiRagService**: Core RAG processing and response generation
-- **PdfProcessingService**: PDF text extraction and processing
-- **DocumentChunkRepository**: Database operations
-- **RagController**: REST API endpoints
-
-### **Textbook-Faithful AI**
-The system is specifically designed to:
-- Use ONLY textbook content for responses
-- Follow the textbook's exact teaching style
-- Maintain mathematical notation consistency
-- Preserve pedagogical approach and rigor
-
-### **Testing**
-```bash
-# Run unit tests
-mvn test
-
-# Check system status
-./scripts/tools/system_status.sh
-```
-
-## 📊 **System Status**
-
-### **Health Monitoring**
-```bash
-# Check application health
-curl http://localhost:8080/health
-
-# Monitor system status
-./scripts/tools/system_status.sh
-
-# View application logs
-tail -f scripts/logs/app_*.log
-```
-
-### **Database Management**
-```bash
-# Backup database
-./scripts/tools/manage_db.sh backup
-
-# Restore database
-./scripts/tools/manage_db.sh restore
-
-# Check document status
-./scripts/tools/check_preloaded_documents.sh
-```
-
-## 🎨 **UI Features**
-
-### **Modern Design**
-- **HSL Gradient Background**: Beautiful blue-green-purple gradient
-- **Glassmorphism Effects**: Modern card and button styling
-- **Responsive Layout**: Works on desktop and mobile
-- **White Text**: High contrast for readability
-
-### **Interactive Elements**
-- **Real-time Chat**: Instant AI responses
-- **Chapter Selection**: Easy navigation by textbook chapters
-- **Search Modes**: Global vs. chapter-specific search
-- **Learning Preferences**: Customizable response styles
-
-## 🔒 **Security & Privacy**
-
-- **Database Encryption**: PostgreSQL with secure configuration
-- **Environment Variables**: Sensitive data stored in environment variables
-- **No External APIs**: Self-contained application
-
-## 📈 **Performance**
-
-### **Optimizations**
-- **Chunked Processing**: Efficient text chunking for large PDFs
-- **Memory Management**: Optimized JVM settings for large documents
-- **Async Processing**: Non-blocking operations for better UX
-
-### **Scalability**
-- **Docker Containerization**: Easy deployment and scaling
-- **Database Optimization**: Indexed searches
-- **Cloud Deployment**: Railway with automatic scaling
-
-## 🤝 **Contributing**
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 **Support**
-
-### **Common Issues**
-- **Port 8080 in use**: `lsof -ti:8080 | xargs kill -9`
-- **Memory issues**: Increase JVM heap size in MAVEN_OPTS
-- **PostgreSQL connection**: Check Docker Compose or Railway service status
-
-### **Getting Help**
-- Check the logs in `scripts/logs/`
-- Review the documentation in `docs/`
-- Test with the provided scripts in `scripts/test/`
-- Visit the live demo: https://textbookragassistant-production.up.railway.app
-
----
-
-**🎓 Your AI now teaches EXACTLY as your textbook teaches!** 📚✨
-
-## 🔄 **MVP Roadmap**
-
-### **Current Version (MVP)**
-- ✅ Basic PDF upload and processing
-- ✅ Text chunking and storage
-- ✅ Simple text-based search
-- ✅ Railway deployment ready
-- ✅ Spring AI integration foundation
-
-### **Next Iterations**
-- 🔄 Full Spring AI integration with Ollama
-- 🔄 Vector embeddings and similarity search
-- 🔄 Advanced RAG with proper AI responses
-- 🔄 Enhanced UI and user experience
-- 🔄 Performance optimizations
+- **Retrieval is keyword-based, not embedding-based, today.** Despite the pgvector and Spring AI Ollama-embedding dependencies being wired into `pom.xml` and `application.yml` (768-dimension vector store, `nomic-embed-text` embedding model config), the query path in `SpringAiRagService.findRelevantContent()` does simple word/phrase scoring over paragraphs of the raw extracted text — no embeddings are generated or compared at query time.
+- **The `DocumentChunk` entity/table exists but isn't populated or read by the current query flow** — the whole document's `extractedText` is searched directly instead. This, together with the vector-store config, suggests the codebase is partway toward a chunk + embedding + vector-similarity retrieval design that hasn't been finished.
+- **Prompt context is deliberately small.** The retrieved excerpt is capped at roughly 200 characters before being sent to the LLM, explicitly to avoid sending large chunks of textbook text to the model — this keeps the app usable with small local models (the default configured model is `qwen2.5:0.5b`, a very small model, presumably chosen to run cheaply on Railway).
+- **Two possible generation backends**: the app can call a self-hosted Ollama instance directly, or route through an Open WebUI-compatible chat completions API when `RAILWAY_SERVICE_OPEN_WEBUI_URL` is set — used for the Railway deployment described in `docs/RAILWAY_DEPLOYMENT.md` and `docs/RAILWAY_DEPLOYMENT_GUIDE.md`.
+- **Cloud auto-seeding**: under the `cloud` Spring profile, `DataInitializationConfig` automatically loads a bundled "Applied Linear Algebra" textbook (from `src/main/resources/textbook_content.txt`, with a hardcoded fallback text if that resource can't be read) so the deployed app has content to query without requiring an upload first.
+- **`documentId = 0` means "search everything"**: both the controller and service treat a document ID of `0` as a request to search the first available document rather than a specific one, effectively acting as the "global search" feature described in the UI.
