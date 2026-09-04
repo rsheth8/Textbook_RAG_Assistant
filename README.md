@@ -1,18 +1,25 @@
-# Textbook RAG Assistant
-
 <p align="center">
-  <img src="docs/brand/logo.png" width="168" alt="Textbook RAG Assistant">
+  <img src="docs/brand/logo.png" width="128" alt="Textbook RAG">
 </p>
 
+<h1 align="center">Textbook RAG</h1>
 
-Upload a textbook PDF and ask questions. Answers are supposed to stick to **that book**, not the model’s general knowledge.
+<p align="center">
+  Ask the book. Stay in the book.
+</p>
 
-| | |
-| --- | --- |
-| **Author** | [Rahil Sheth](https://github.com/rsheth8) |
-| **Repo** | [rsheth8/Textbook_RAG_Assistant](https://github.com/rsheth8/Textbook_RAG_Assistant) |
-| **Stack** | Java 17, Spring Boot 3.2, PostgreSQL, Apache PDFBox, Ollama / Open WebUI |
-| **Status** | Working study tool. Retrieval today is **keyword / paragraph scoring**, not embeddings — pgvector is in the pom as scaffolding. See implementation notes below. |
+<p align="center">
+  <a href="https://github.com/rsheth8/Textbook_RAG_Assistant">Source</a>&nbsp;·&nbsp;<a href="CONTRIBUTING.md">Run locally</a>
+</p>
+
+<p align="center">
+  <img alt="Java" src="https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white">
+  <img alt="Spring" src="https://img.shields.io/badge/Spring%20Boot-3.2-6DB33F?style=flat-square&logo=springboot&logoColor=white">
+</p>
+
+<p align="center"><sub>Retrieval today is keyword / paragraph scoring — not embeddings. pgvector is scaffolding.</sub></p>
+
+---
 
 ## What this is
 
