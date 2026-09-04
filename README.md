@@ -1,6 +1,13 @@
 # Textbook RAG Assistant
 
-A Spring Boot application that lets you upload a textbook PDF and ask questions about it, answered by an LLM using only the textbook's own text.
+Upload a textbook PDF and ask questions. Answers are supposed to stick to **that book**, not the model’s general knowledge.
+
+| | |
+| --- | --- |
+| **Author** | [Rahil Sheth](https://github.com/rsheth8) |
+| **Repo** | [rsheth8/Textbook_RAG_Assistant](https://github.com/rsheth8/Textbook_RAG_Assistant) |
+| **Stack** | Java 17, Spring Boot 3.2, PostgreSQL, Apache PDFBox, Ollama / Open WebUI |
+| **Status** | Working study tool. Retrieval today is **keyword / paragraph scoring**, not embeddings — pgvector is in the pom as scaffolding. See implementation notes below. |
 
 ## What this is
 
