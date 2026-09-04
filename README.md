@@ -1,5 +1,10 @@
 # Textbook RAG Assistant
 
+<p align="center">
+  <img src="docs/brand/logo.png" width="168" alt="Textbook RAG Assistant">
+</p>
+
+
 Upload a textbook PDF and ask questions. Answers are supposed to stick to **that book**, not the model’s general knowledge.
 
 | | |
@@ -159,3 +164,10 @@ The app listens on **http://localhost:8080** by default (chat UI at `/`, health 
 - **Two possible generation backends**: the app can call a self-hosted Ollama instance directly, or route through an Open WebUI-compatible chat completions API when `RAILWAY_SERVICE_OPEN_WEBUI_URL` is set — used for the Railway deployment described in `docs/RAILWAY_DEPLOYMENT.md` and `docs/RAILWAY_DEPLOYMENT_GUIDE.md`.
 - **Cloud auto-seeding**: under the `cloud` Spring profile, `DataInitializationConfig` automatically loads a bundled "Applied Linear Algebra" textbook (from `src/main/resources/textbook_content.txt`, with a hardcoded fallback text if that resource can't be read) so the deployed app has content to query without requiring an upload first.
 - **`documentId = 0` means "search everything"**: both the controller and service treat a document ID of `0` as a request to search the first available document rather than a specific one, effectively acting as the "global search" feature described in the UI.
+
+## Contributing
+
+PRs and issues welcome. How to run tests, env vars, and the expected layout: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Don't commit `.env`, API keys, or personal recordings.
+
